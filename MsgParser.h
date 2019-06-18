@@ -2,16 +2,24 @@
 #define _MSG_PARSER_
 
 #include "MsgStruct.h"
+#include "UserList.h"
+#include "UserVerify.h"
 
+// 联合体，在处理命令时可以区分验证信息还是列表
+typedef union 
+{
+    userVerify nameAndPwd;
+    userList list;
+}Stnparser;
 
-Status analysisLoginCmd(const char *str, char *user, char *pwd);
-Status analysisRegisterCmd(const char *str, char *user, char *pwd);
-// 使用前记得先用malloc为list申请好内存
-Status analysisUserListCmd(const char *str, char *list[], int *num);
-
-// 解析命令实体，用法需要特别注意，interestType需要真实地址传入，
-// interest1和interest2传进去是NULL，传出来申请了内存空间，后面记得free
-Status analysisCmdEty(MsgEntity *entity, int *interestType, void *interest1, void *interest2);
+// 解析登陆&注册命令内容
+Status analysisLogRegCmd(const char *str, userVerify *getNamePwd);
+// 解析用户列表内容
+Status analysisUserListCmd(const char *str, userList *list);
+// 开始解析一个命令消息
+Status analysisCmdEty(MsgEntity *entity, CmdType *Msgtype, Stnparser *container);
+// 结束解析一个命令消息，记得要配对使用，否则会造成内存泄漏
+Status endAnalysis(int *Msgtype, Stnparser *container);
 
 Status clientLogin(MsgEntity *entity, char *user, char * pwd);
 Status clientRegister(MsgEntity *entity, char *user, char *pwd);

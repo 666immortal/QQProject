@@ -4,6 +4,7 @@ Status initUser(userStruct *user)
 {
     if(NULL == user)
     {
+        printf("initUser error: pointer is null");
         return FAILURE;
     }
 
@@ -18,6 +19,7 @@ Status deleteUser(userStruct *user)
 {
     if(NULL == user)
     {
+        printf("deleteUser error: pointer is null");
         return FAILURE;
     }
 
@@ -30,6 +32,7 @@ Status initUserList(userList *list)
 {
     if(NULL == list)
     {
+        printf("initUserList error: pointer is null");
         return FAILURE;
     }
 
@@ -47,6 +50,7 @@ Status deleteUserList(userList *list)
 {
     if(NULL == list)
     {
+        printf("deleteUserList error: pointer is null");
         return FAILURE;
     }
 
@@ -63,6 +67,7 @@ Status makeUserList(const char *str, userList *list)
 {
     if(NULL == str)
     {
+        printf("makeUserList error: pointer is null");
         return FAILURE;
     }
 
@@ -79,9 +84,10 @@ Status makeUserList(const char *str, userList *list)
         else
         {
             tmp[k] = '\0';
-            list->user->username.length = k;
-            strcpy(list->user->username.str, tmp);
-            list->num++;
+            list->user[n].username.length = k;
+            strcpy(list->user[n].username.str, tmp);
+            list->user[n].index = n;
+            n++;
             k = 0;
         }
         
@@ -89,9 +95,54 @@ Status makeUserList(const char *str, userList *list)
     }
 
     tmp[k] = '\0';
-    list->user->username.length = k;
-    strcpy(list->user->username.str, tmp);
-    list->num++;
+    list->user[n].username.length = k;
+    strcpy(list->user[n].username.str, tmp);
+    list->user[n].index = n;
+    n++;
+    list->num = n;
 
     return SUCCESSFUL;
+}
+
+Status showUserList(userList list)
+{
+    int i;
+    if(0 >= list.num)
+    {
+        printf("Nobody online!\n");
+        return FAILURE;
+    }
+
+    for(i = 0; i < list.num; i++)
+    {
+        printf("No.%d: %s\n", list.user[i].index, list.user[i].username);
+    }
+
+    return SUCCESSFUL;
+}
+
+Status listToString(userList list, char *str)
+{
+    if(list.num == 0)
+    {
+        printf("listToString error: nobody in list");
+        return FAILURE;
+    }
+    if(NULL == str)
+    {
+        printf("listToString error: pointer is null");
+        return FAILURE;
+    }
+
+    int i;
+
+    strcpy(str, list.user[0].username.str);
+
+    for(i = 1; i < list.num; i++)
+    {
+        strcat(str, " ");
+        strcat(str, list.user[i].username.str);
+    }
+
+    return 0;
 }

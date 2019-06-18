@@ -1,31 +1,21 @@
+#include "UserList.h"
 #include "MsgParser.h"
 
-//#define TEST_ONLINELIST
+#define TEST_ONLINELIST
 //#define TEST_REG_LOG
-#define TEST_CMD
+//#define TEST_CMD
 
 #ifdef TEST_ONLINELIST
 int main()
 {
     char str[] = "Hello I am Jack";
-    int num, i;
-    char *name[20];
-    for(i = 0; i < 20; i++)
-    {
-        name[i] = (char*)malloc(sizeof(char)*20);
-    }
+    userList list;
+    initUserList(&list);
 
-    analysisOnlineListCmd(str, name, &num);
+    makeUserList(str, &list);
+    showUserList(list);
 
-    for(i = 0; i < num; i++)
-    {
-        printf("%s\n", name[i]);
-    }
-
-    for(i = 0; i < 20; i++)
-    {
-        free(name[i]);
-    }
+    deleteUserList(&list);
 
     return 0;
 }

@@ -1,4 +1,4 @@
-OBJS=test.o MsgStruct.o MsgParser.o
+OBJS=test.o MsgStruct.o MsgParser.o UserList.o
 CC=gcc
 CFLAGS=-c -g
 

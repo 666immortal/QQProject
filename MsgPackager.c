@@ -4,6 +4,7 @@ Status setCommand(MsgEntity *cmd, CmdType doWhat, char *str, int flag)
 {
     if(str == NULL || cmd == NULL)
     {
+        printf("setCommand error: pointer is null");
         return FAILURE;
     }
 
@@ -18,6 +19,7 @@ Status setDialogue(MsgEntity *dlg, int forWho, char *str, MsgFlag flag)
 {
     if(str == NULL || dlg == NULL)
     {
+        printf("setDialogue error: pointer is null");
         return FAILURE;
     }
 
@@ -32,6 +34,7 @@ Status configLoginEty(MsgEntity *entity, char *user, char * pwd)
 {
     if(user == NULL || pwd == NULL || entity == NULL)
     {
+        printf("configLoginEty error: pointer is null");
         return FAILURE;
     }
 
@@ -48,6 +51,7 @@ Status configRegisterEty(MsgEntity *entity, char *user, char * pwd)
 {
     if(user == NULL || pwd == NULL || entity == NULL)
     {
+        printf("configRegisterEty error: pointer is null");
         return FAILURE;
     }
 
@@ -64,6 +68,7 @@ Status configUserListEty(MsgEntity *entity, char **list, int num)
 {
     if(list == NULL || entity == NULL)
     {
+        printf("configUserListEty error: pointer is null");
         return FAILURE;
     }
 
@@ -87,6 +92,7 @@ Status configExitEty(MsgEntity *entity)
 {
     if(entity == NULL)
     {
+        printf("configExitEty error: pointer is null");
         return FAILURE;
     }
 
