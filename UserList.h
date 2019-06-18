@@ -17,8 +17,6 @@ typedef struct
     int num;
 }userList;
 
-
-
 Status initUser(userStruct *user); // 初始化一个用户类
 Status deleteUser(userStruct *user); // 删除一个用户类（指释放内存）
 Status initUserList(userList *list); // 初始化用户列表
@@ -32,6 +30,5 @@ Status listToString(userList list, char *str); // 将列表连接成串，以空
 Status addUser(userList *list, char *name, int *index);
 // 从列表中移除用户之后，记得释放user指针
 Status removeUser(userList *list, int index);
-
 
 #endif
