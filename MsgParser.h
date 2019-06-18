@@ -17,12 +17,9 @@ Status analysisLogRegCmd(const char *str, userVerify *getNamePwd);
 // 解析用户列表内容
 Status analysisUserListCmd(const char *str, userList *list);
 // 开始解析一个命令消息
-Status analysisCmdEty(MsgEntity *entity, CmdType *Msgtype, Stnparser *container);
+Status analysisCmdEty(MsgEntity *entity, int *Msgtype, Stnparser *container);
 // 结束解析一个命令消息，记得要配对使用，否则会造成内存泄漏
-Status endAnalysis(int *Msgtype, Stnparser *container);
-
-Status clientLogin(MsgEntity *entity, char *user, char * pwd);
-Status clientRegister(MsgEntity *entity, char *user, char *pwd);
+Status endAnalysis(int Msgtype, Stnparser *container);
 
 
 #endif

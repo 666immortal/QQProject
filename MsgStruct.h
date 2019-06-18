@@ -41,4 +41,7 @@ typedef struct
     MsgEntity content; // 消息实体
 }MsgContainer;
 
+void showMsgEntity(MsgEntity ety);
+void showMsgContainer(MsgContainer ctn);
+
 #endif

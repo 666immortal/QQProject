@@ -9,8 +9,7 @@ Status initUser(userStruct *user)
     }
 
     user->index = 0;
-    user->username.length = 0;
-    user->username.str = (char *)malloc(sizeof(char)*NAME_MAX_LEN);
+    user->username = (char *)malloc(sizeof(char)*NAME_MAX_LEN);
 
     return SUCCESSFUL;
 }
@@ -23,7 +22,7 @@ Status deleteUser(userStruct *user)
         return FAILURE;
     }
 
-    free(user->username.str);
+    free(user->username);
 
     return SUCCESSFUL;
 }
@@ -84,8 +83,7 @@ Status makeUserList(const char *str, userList *list)
         else
         {
             tmp[k] = '\0';
-            list->user[n].username.length = k;
-            strcpy(list->user[n].username.str, tmp);
+            strcpy(list->user[n].username, tmp);
             list->user[n].index = n;
             n++;
             k = 0;
@@ -95,8 +93,7 @@ Status makeUserList(const char *str, userList *list)
     }
 
     tmp[k] = '\0';
-    list->user[n].username.length = k;
-    strcpy(list->user[n].username.str, tmp);
+    strcpy(list->user[n].username, tmp);
     list->user[n].index = n;
     n++;
     list->num = n;
@@ -115,7 +112,7 @@ Status showUserList(userList list)
 
     for(i = 0; i < list.num; i++)
     {
-        printf("No.%d: %s\n", list.user[i].index, list.user[i].username);
+        printf("No.%d: %s\n", list.user[i].index + 1, list.user[i].username);
     }
 
     return SUCCESSFUL;
@@ -136,13 +133,54 @@ Status listToString(userList list, char *str)
 
     int i;
 
-    strcpy(str, list.user[0].username.str);
+    strcpy(str, list.user[0].username);
 
     for(i = 1; i < list.num; i++)
     {
         strcat(str, " ");
-        strcat(str, list.user[i].username.str);
+        strcat(str, list.user[i].username);
     }
 
     return 0;
+}
+
+Status addUser(userList *list, char *name, int *index)
+{
+    if(list->num >= USER_MAX_NUM)
+    {
+        printf("addUser error: reach maximum user num\n");
+        return FAILURE;
+    }
+
+    strcpy(list->user[list->num].username, name);
+    list->user[list->num].index = list->num;
+    
+    if(index != NULL)
+    {
+        *index = list->num;
+    }
+    
+    list->num++;
+
+    return SUCCESSFUL;
+}
+
+Status removeUser(userList *list, int index)
+{
+    if(list->num <= 0)
+    {
+        printf("removeUser error: user list is empty\n");
+        return FAILURE;
+    }
+
+    int i;
+    for(i = index; i < list->num - 1; i++)
+    {
+        list->user[i] = list->user[i + 1];  
+        list->user[i].index--;
+    }
+
+    list->num--;
+
+    return SUCCESSFUL;
 }

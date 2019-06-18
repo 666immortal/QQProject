@@ -64,7 +64,7 @@ Status configRegisterEty(MsgEntity *entity, char *user, char * pwd)
     return SUCCESSFUL;
 }
 
-Status configUserListEty(MsgEntity *entity, char **list, int num)
+Status configUserListEty(MsgEntity *entity, userList *list)
 {
     if(list == NULL || entity == NULL)
     {
@@ -73,16 +73,11 @@ Status configUserListEty(MsgEntity *entity, char **list, int num)
     }
 
     char jointStr[DETAILS_LEN];
-    int i;
-
-    strcpy(jointStr, list[0]);
-    for(i = 1; i < num; i++)
-    {
-        strcat(jointStr, list[i]);
-    }
+    
+    listToString(*list, jointStr);
 
     entity->object = CMD_GETLIST;
-    entity->flag = num;
+    entity->flag = list->num;
     strcpy(entity->details, jointStr);
 
     return SUCCESSFUL;

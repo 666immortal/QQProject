@@ -20,10 +20,6 @@
 typedef int Status;
 
 // 字符串结构体
-typedef struct
-{
-    char *str;
-    int length;
-}string;
+typedef char* string;
 
 #endif

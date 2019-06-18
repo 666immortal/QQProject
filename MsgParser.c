@@ -8,7 +8,26 @@ Status analysisLogRegCmd(const char *str, userVerify *getNamePwd)
         return FAILURE;
     }
 
-    sscanf(str, "%s %s", getNamePwd->username, getNamePwd->password);
+    int i = 0, k = 0;
+    char tmp[NAME_MAX_LEN];
+
+    while (str[i] != '\0')
+    {
+        if(str[i] != ' ')
+        {
+            tmp[k] = str[i];
+            k++;
+        }
+        else
+        {
+            tmp[k] = '\0';
+            strcpy(getNamePwd->username, tmp);
+            k = 0;            
+        }    
+        i++;    
+    }
+    tmp[k] = '\0';
+    strcpy(getNamePwd->password, tmp);
     
     return SUCCESSFUL;
 }
@@ -29,8 +48,8 @@ Status analysisUserListCmd(const char *str, userList *list)
 Status analysisCmdEty(MsgEntity *entity, int *Msgtype, Stnparser *container)
 {
     Status res = FAILURE;
-    int type, n;
-
+    int type;
+    
     switch (type = entity->object)
     {
     case CMD_LOGIN:
@@ -42,9 +61,11 @@ Status analysisCmdEty(MsgEntity *entity, int *Msgtype, Stnparser *container)
     case CMD_GETLIST:
         initUserList(&container->list);
         analysisUserListCmd(entity->details, &container->list);
+        res = SUCCESSFUL;
         break;
     case CMD_EXIT:
         printf("exit");
+        res = SUCCESSFUL;
         break;
     default:
         printf("analysisCmdEty error: error type");
@@ -59,7 +80,7 @@ Status analysisCmdEty(MsgEntity *entity, int *Msgtype, Stnparser *container)
     return res;
 }
 
-Status endAnalysis(CmdType *Msgtype, Stnparser *container)
+Status endAnalysis(int Msgtype, Stnparser *container)
 {
     if(NULL == container)
     {
