@@ -1,6 +1,4 @@
-#include "Message.h"
-#include <stdio.h>
-#include <string.h>
+#include "MsgPackager.h"
 
 Status setCommand(MsgEntity *cmd, CmdType doWhat, char *str, int flag)
 {
@@ -37,7 +35,7 @@ Status configLoginEty(MsgEntity *entity, char *user, char * pwd)
         return FAILURE;
     }
 
-    char jointStr[200];
+    char jointStr[DETAILS_LEN];
     sprintf(jointStr, "%s %s", user, pwd);
     entity->object = CMD_LOGIN;
     entity->flag = SEND_FLAG;
@@ -53,7 +51,7 @@ Status configRegisterEty(MsgEntity *entity, char *user, char * pwd)
         return FAILURE;
     }
 
-    char jointStr[200];
+    char jointStr[DETAILS_LEN];
     sprintf(jointStr, "%s %s", user, pwd);
     entity->object = CMD_REGISTER;
     entity->flag = SEND_FLAG;
@@ -62,14 +60,14 @@ Status configRegisterEty(MsgEntity *entity, char *user, char * pwd)
     return SUCCESSFUL;
 }
 
-Status configOnlineListEty(MsgEntity *entity, char **list, int num)
+Status configUserListEty(MsgEntity *entity, char **list, int num)
 {
     if(list == NULL || entity == NULL)
     {
         return FAILURE;
     }
 
-    char jointStr[200];
+    char jointStr[DETAILS_LEN];
     int i;
 
     strcpy(jointStr, list[0]);
@@ -97,39 +95,4 @@ Status configExitEty(MsgEntity *entity)
     strcpy(entity->details, "");
 
     return SUCCESSFUL;
-}
-
-Status analysisCmdEty(MsgEntity *entity, int *interestType, void *interestPoint)
-{
-    Status res = FAILURE;
-    int type = 0;
-    switch (entity->object)
-    {
-    case CMD_LOGIN:
-        /* code */
-        type = CMD_LOGIN;
-        res = SUCCESSFUL;
-        break;
-    case CMD_REGISTER:
-        /* code */
-        type = CMD_REGISTER;
-        res = SUCCESSFUL;
-        break;
-    case CMD_GETLIST:
-        /* code */
-        type = CMD_GETLIST;
-        break;
-    case CMD_EXIT:
-        /* code */
-        type = CMD_EXIT;
-        break;
-    default:
-        break;
-    }
-    
-    if(interestType != NULL)
-    {
-        *interestType = type;
-    }
-    return res;
 }
