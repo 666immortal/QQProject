@@ -1,6 +1,5 @@
 #include "SendFunc.h"
 
-
 // 用户登陆时，服务器回应Login表示登陆成功，服务器回应Register表示登陆失败
 Status sendLogin(int ID)
 {
@@ -33,9 +32,9 @@ Status sendCmd(MsgEntity *ety, int ID)
     tmp.type = COMMAND;
     tmp.content = *ety;
 
-    if(send(ID, (void *)&tmp, sizeof(MsgContainer)) == -1)
+    if(send(ID, (void *)&tmp, sizeof(MsgContainer), 0) == -1)
     {
-        perror("send Error!");
+        perror("send Error!\n");
         return FAILURE;
     }
 
@@ -54,9 +53,9 @@ Status sendDlg(MsgEntity *ety, int ID)
     tmp.type = DIALOGUE;
     tmp.content = *ety;
 
-    if(send(ID, (void *)&tmp, sizeof(MsgContainer)) == -1)
+    if(send(ID, (void *)&tmp, sizeof(MsgContainer), 0) == -1)
     {
-        perror("send Error!");
+        perror("send Error!\n");
         return FAILURE;
     }
 

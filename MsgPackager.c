@@ -4,7 +4,7 @@ Status setCommand(MsgEntity *cmd, CmdType doWhat, char *str, int flag)
 {
     if(str == NULL || cmd == NULL)
     {
-        printf("setCommand error: pointer is null");
+        printf("setCommand error: pointer is null\n");
         return FAILURE;
     }
 
@@ -19,7 +19,7 @@ Status setDialogue(MsgEntity *dlg, int forWho, char *str, MsgFlag flag)
 {
     if(str == NULL || dlg == NULL)
     {
-        printf("setDialogue error: pointer is null");
+        printf("setDialogue error: pointer is null\n");
         return FAILURE;
     }
 
@@ -34,12 +34,12 @@ Status configLoginEty(MsgEntity *entity, char *user, char * pwd)
 {
     if(user == NULL || pwd == NULL || entity == NULL)
     {
-        printf("configLoginEty error: pointer is null");
+        printf("configLoginEty error: pointer is null\n");
         return FAILURE;
     }
 
     char jointStr[DETAILS_LEN];
-    sprintf(jointStr, "%s %s", user, pwd);
+    sprintf(jointStr, "%s#%s", user, pwd);
     entity->object = CMD_LOGIN;
     entity->flag = SEND_FLAG;
     strcpy(entity->details, jointStr);
@@ -51,12 +51,12 @@ Status configRegisterEty(MsgEntity *entity, char *user, char * pwd)
 {
     if(user == NULL || pwd == NULL || entity == NULL)
     {
-        printf("configRegisterEty error: pointer is null");
+        printf("configRegisterEty error: pointer is null\n");
         return FAILURE;
     }
 
     char jointStr[DETAILS_LEN];
-    sprintf(jointStr, "%s %s", user, pwd);
+    sprintf(jointStr, "%s#%s", user, pwd);
     entity->object = CMD_REGISTER;
     entity->flag = SEND_FLAG;
     strcpy(entity->details, jointStr);
@@ -68,7 +68,7 @@ Status configUserListEty(MsgEntity *entity, userList *list)
 {
     if(list == NULL || entity == NULL)
     {
-        printf("configUserListEty error: pointer is null");
+        printf("configUserListEty error: pointer is null\n");
         return FAILURE;
     }
 
@@ -87,7 +87,7 @@ Status configExitEty(MsgEntity *entity)
 {
     if(entity == NULL)
     {
-        printf("configExitEty error: pointer is null");
+        printf("configExitEty error: pointer is null\n");
         return FAILURE;
     }
 

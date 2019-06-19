@@ -4,7 +4,7 @@ Status analysisLogRegCmd(const char *str, userVerify *getNamePwd)
 {
     if(NULL == str)
     {
-        printf("analysisLogRegCmd error: pointer is null");
+        printf("analysisLogRegCmd error: pointer is null\n");
         return FAILURE;
     }
 
@@ -13,7 +13,7 @@ Status analysisLogRegCmd(const char *str, userVerify *getNamePwd)
 
     while (str[i] != '\0')
     {
-        if(str[i] != ' ')
+        if(str[i] != '#')
         {
             tmp[k] = str[i];
             k++;
@@ -36,7 +36,7 @@ Status analysisUserListCmd(const char *str, userList *list)
 {
     if(NULL == str || NULL == list)
     {
-        printf("analysisUserListCmd error: pointer is null");
+        printf("analysisUserListCmd error: pointer is null\n");
         return FAILURE;
     }
 
@@ -63,11 +63,11 @@ Status analysisCmdEty(MsgEntity *entity, int *Msgtype, Stnparser *container)
         res = SUCCESSFUL;
         break;
     case CMD_EXIT:
-        printf("exit");
+        printf("exit\n");
         res = SUCCESSFUL;
         break;
     default:
-        printf("analysisCmdEty error: error type");
+        printf("analysisCmdEty error: error type\n");
         break;
     }
     
@@ -83,7 +83,7 @@ Status endAnalysis(int Msgtype, Stnparser *container)
 {
     if(NULL == container)
     {
-        printf("endAnalysis error: pointer is null");
+        printf("endAnalysis error: pointer is null\n");
         return FAILURE;
     }
     else if(Msgtype == CMD_GETLIST)

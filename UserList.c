@@ -4,7 +4,7 @@ Status initUser(userStruct *user)
 {
     if(NULL == user)
     {
-        printf("initUser error: pointer is null");
+        printf("initUser error: pointer is null\n");
         return FAILURE;
     }
 
@@ -18,7 +18,7 @@ Status deleteUser(userStruct *user)
 {
     if(NULL == user)
     {
-        printf("deleteUser error: pointer is null");
+        printf("deleteUser error: pointer is null\n");
         return FAILURE;
     }
 
@@ -31,7 +31,7 @@ Status initUserList(userList *list)
 {
     if(NULL == list)
     {
-        printf("initUserList error: pointer is null");
+        printf("initUserList error: pointer is null\n");
         return FAILURE;
     }
 
@@ -49,7 +49,7 @@ Status deleteUserList(userList *list)
 {
     if(NULL == list)
     {
-        printf("deleteUserList error: pointer is null");
+        printf("deleteUserList error: pointer is null\n");
         return FAILURE;
     }
 
@@ -66,7 +66,7 @@ Status makeUserList(const char *str, userList *list)
 {
     if(NULL == str)
     {
-        printf("makeUserList error: pointer is null");
+        printf("makeUserList error: pointer is null\n");
         return FAILURE;
     }
 
@@ -75,7 +75,7 @@ Status makeUserList(const char *str, userList *list)
 
     while ('\0' != str[i])
     {
-        if(' ' != str[i])
+        if('#' != str[i])
         {
             tmp[k] = str[i];
             k++;      
@@ -144,14 +144,14 @@ Status listToString(userList list, char *str)
     sprintf(putID, "%d", list.user[0].threadID);
 
     strcpy(str, list.user[0].username);
-    strcat(str, " ");
+    strcat(str, "#");
     strcat(str, putID);
 
     for(i = 1; i < list.num; i++)
     {
-        strcat(str, " ");
+        strcat(str, "#");
         strcat(str, list.user[i].username);
-        strcat(str, " ");
+        strcat(str, "#");
         sprintf(putID, "%d", list.user[i].threadID);
         strcat(str, putID);
     }

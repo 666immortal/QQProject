@@ -27,7 +27,7 @@ void *serverClient(void* arg)
     pthread_mutex_init(&list_mutex, NULL);
 
     // 初始时为未登录状态
-    state.online = FAILURE;
+    state.online = OFFLINE;
     int theClient = *(int*)arg;
     int bytesNum;
     char buf[MAXBUFLEN];
@@ -56,6 +56,7 @@ void *serverClient(void* arg)
             else
             {
                 // 解析数据包并执行操作
+                showMsgContainer(*(MsgContainer*)buf);
                 unPack(*(MsgContainer*)buf);
             }
         }    
@@ -96,7 +97,7 @@ Status unPack(MsgContainer package)
                 if(res == FAILURE) // 发生错误，退出
                     break;
                 setThreadState(ONLINE); // 注册成功之后，马上登陆
-                sendRegister(getThreadID); // 发送用户注册成功消息
+                sendRegister(getThreadID()); // 发送用户注册成功消息
                 pthread_mutex_lock(&list_mutex);  // 给用户列表上锁
                 res = broadcastList(&onlineUserList); // 群发新的名单
                 pthread_mutex_unlock(&list_mutex); // 给用户列表解锁
@@ -212,13 +213,13 @@ Status clientRegister(userVerify info)
 
     pthread_mutex_lock(&file_mutex);
     FILE *fp;
-    if(fp = fopen("userdata.txt", "a") == NULL)
+    if((fp = fopen("userdata", "a")) == NULL)
     {
         perror("clientRegister opens file error\n");
         return FAILURE;
     }
 
-    fprintf(fp, "%s\t%s\n", info.username, info.password);
+    fprintf(fp, "%s#%s\n", info.username, info.password);
 
     if(fclose(fp) != 0)
     {
@@ -234,18 +235,21 @@ Status searchInFile(userVerify info)
 {
     pthread_mutex_lock(&file_mutex);
     FILE *fp;
+    char tmp[NAME_MAX_LEN+PWD_MAX_LEN+1];
     char tmpName[NAME_MAX_LEN];
     char tmpPwd[PWD_MAX_LEN];
     int res = FAILURE;
 
-    if(fp = fopen("userdata.txt", "r") == NULL)
+    if((fp = fopen("userdata", "r+")) == NULL)
     {
         perror("searchInFile opens file error\n");
         return FAILURE;
     }
 
-    while (fscanf(fp, "%s\t%s\n", tmpName, tmpPwd) == 1)
-    {
+    rewind(fp);
+
+    while (fscanf(fp, "%s#%s", tmpName, tmpPwd) == 1)
+    {        
         if(strcmp(info.username, tmpName) == 0)
             if(strcmp(info.password, tmpPwd) == 0)
                 res = SUCCESSFUL;

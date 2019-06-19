@@ -12,7 +12,7 @@
 #include "ServerFunc.h"
 #include "UserList.h"
 
-#define IPADDR "127.0.0.1"
+#define SERVER_IPADDR "127.0.0.1"
 #define SERVPORT 1012 /*server listening port*/
 #define BACKLOG 10 /*allow total number of connection*/
 
@@ -35,7 +35,7 @@ int main()
   bzero(&my_addr,sizeof(my_addr));
   my_addr.sin_family = AF_INET;  /*there is a quescstion here:as I have two network card*/
   my_addr.sin_port = htons(SERVPORT);
-  my_addr.sin_addr.s_addr = inet_addr(IPADDR);/*IP Address  Also has a quesstion*/
+  my_addr.sin_addr.s_addr = inet_addr(SERVER_IPADDR);/*IP Address  Also has a quesstion*/
   // bzero(&(my_addr.sin_zero),8);
 
   int i_bind_return = bind(sockfd,(struct sockaddr *)&my_addr,sizeof(my_addr));
@@ -74,7 +74,6 @@ int main()
       printf("error!%d\n", res);
       exit(1);
     }
-    pthread_join(tid, NULL);
   }
 
   deleteUserList(&onlineUserList);
