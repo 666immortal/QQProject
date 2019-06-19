@@ -32,10 +32,6 @@ void *serverClient(void* arg)
     int bytesNum;
     char buf[MAXBUFLEN];
 
-    /* if(send(client_fd,"Hello,you are connected!\n",26,0) == -1)
-    {
-        perror("send Error!");
-    }*/
     // 设置好进程的ID号
     setThreadID(theClient);
 
@@ -43,9 +39,10 @@ void *serverClient(void* arg)
     {
         memset(buf,0,sizeof(buf)); //将内存内容全部初始化为0
         bytesNum = recv(theClient,(void *)buf,sizeof(MsgContainer),0);
+
         if(bytesNum == -1)
         {
-        perror("recv Error:");
+            perror("recv Error:");
         }
         else
         {            
@@ -53,7 +50,7 @@ void *serverClient(void* arg)
             {
                 break;
             }
-            else if(bytesNum == sizeof(MsgContainer))
+            else
             {
                 MsgContainer package;
                 package = *(MsgContainer*)buf;
@@ -66,6 +63,8 @@ void *serverClient(void* arg)
 
 Status unPack(MsgContainer package)
 {
+    int res = FAILURE;
+
     if(package.type == COMMAND)
     {
         int type;
@@ -81,23 +80,26 @@ Status unPack(MsgContainer package)
                 if(clientRegister(info.nameAndPwd) == SUCCESSFUL)
                 {
                     pthread_mutex_lock(&list_mutex);
-                    addUser(&onlineUserList, info.nameAndPwd.username, getThreadID());
+                    res = addUser(&onlineUserList, info.nameAndPwd.username, getThreadID());
                     pthread_mutex_unlock(&list_mutex);
+                    if(res == FAILURE)
+                        break;
                     setThreadState(ONLINE);
-                    sendOK(getThreadID());
-                    // 更新所有用户列表
-                    // 待补充。。。。。。。。。。。。。。。。通过群发命令包更新
+                    sendRegister(getThreadID);
+                    res = broadcastList();
                 }
                 else
                 {
-                    printf("Register failure\n");
-                    sendError(getThreadID());
+                    perror("Register failure\n");
+                    sendLogin(getThreadID());
+                    res = FAILURE;
                 }                
             }
             else
             {
-                printf("User has been online\n");
-                sendError(getThreadID());
+                perror("User has been online\n");
+                sendLogin(getThreadID());
+                res = FAILURE;
             }
             break;
         case CMD_LOGIN:
@@ -106,49 +108,56 @@ Status unPack(MsgContainer package)
                 if(clientLogin(info.nameAndPwd) == SUCCESSFUL)
                 {
                     pthread_mutex_lock(&list_mutex);
-                    addUser(&onlineUserList, info.nameAndPwd.username, getThreadID());
+                    res = addUser(&onlineUserList, info.nameAndPwd.username, getThreadID());
                     pthread_mutex_unlock(&list_mutex);
+                    if(res == FAILURE)
+                        break;
                     setThreadState(ONLINE);
-                    sendOK(getThreadID());
-                    // 更新所有用户列表
-                    // 待补充。。。。。。。。。。。。。。。。通过群发命令包更新
+                    sendLogin(getThreadID());
+                    res = broadcastList();
                 }
                 else
                 {
-                    printf("Can't match\n");
-                    sendError(getThreadID());
+                    perror("Can't match\n");
+                    sendRegister(getThreadID());
+                    res = FAILURE;
                 }                
             }
             else
             {
-                printf("User has been online\n");
-                sendError(getThreadID());
+                perror("User has been online\n");
+                sendRegister(getThreadID());
+                res = FAILURE;
             }
             break;
         case CMD_GETLIST:
-            onlineUserList = info.list;
+            res = clientWannaList(getThreadID());
+            //onlineUserList = info.list;
             break;
         case CMD_EXIT:
             if(getThreadState() == ONLINE)
-            {
-                if(clientExit() == SUCCESSFUL)
+            {                
+                pthread_mutex_lock(&list_mutex);
+                res = removeUser(&onlineUserList, getThreadID());
+                pthread_mutex_unlock(&list_mutex);
+                if(res == SUCCESSFUL)
+                    res = broadcastList();
+                if(clientExit(getThreadID()) == FAILURE)
                 {
-                    pthread_mutex_lock(&list_mutex);
-                    removeUser(&onlineUserList, getThreadID());
-                    pthread_mutex_unlock(&list_mutex);
-                    // 更新其他线程的ID，因为注销这个用户之后，其他用户的ID号随之更改
-                    // 待补充。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。
-                    // 更新所有用户列表
-                    // 待补充。。。。。。。。。。。。。。。。通过群发命令包更新
-                }
+                    perror("Client exit error\n");
+                    res = FAILURE;
+                }                
             }
             else
             {
-                printf("The user had been offline\n");
+                perror("The user had been offline\n");
                 sendError(getThreadID());
+                res = FAILURE;
             }            
             break;
         default:
+            res = FAILURE;
+            printf("error command\n");
             break;
         }
 
@@ -159,6 +168,7 @@ Status unPack(MsgContainer package)
 
     }
     
+    return res;
 }
 
 Status clientRegister(userVerify info)
@@ -167,13 +177,13 @@ Status clientRegister(userVerify info)
     FILE *fp;
     if(fp = fopen("userdata.txt", "a") == NULL)
     {
-        printf("clientRegister opens file error\n");
+        perror("clientRegister opens file error\n");
         return FAILURE;
     }
     
     if(strlen(info.username) >= NAME_MAX_LEN || strlen(info.password) >= PWD_MAX_LEN)
     {
-        printf("clientRegister error: name or password is too long\n");
+        perror("clientRegister error: name or password is too long\n");
         return FAILURE;
     }
 
@@ -181,7 +191,7 @@ Status clientRegister(userVerify info)
 
     if(fclose(fp) != 0)
     {
-        printf("clientRegiser errors in closing file\n");
+        perror("clientRegiser errors in closing file\n");
         return FAILURE;
     }
     pthread_mutex_unlock(&file_mutex);
@@ -199,7 +209,7 @@ Status clientLogin(userVerify info)
 
     if(fp = fopen("userdata.txt", "r") == NULL)
     {
-        printf("clientLogin opens file error\n");
+        perror("clientLogin opens file error\n");
         return FAILURE;
     }
 
@@ -212,31 +222,121 @@ Status clientLogin(userVerify info)
     
     if(fclose(fp) != 0)
     {
-        printf("clientLogin errors in closing file\n");
+        perror("clientLogin errors in closing file\n");
         return FAILURE;
     }
     pthread_mutex_unlock(&file_mutex);
 
     if(res == FAILURE)
     {
-        printf("clientLogin: match failure, Please register first\n");
+        perror("clientLogin: match failure, Please register first\n");
     }
 
     return res;
 }
 
-Status clientWannaList(userList list)
+Status clientWannaList(int ID)
 {
-
+    MsgEntity tmp;
+    if(configUserListEty(&tmp, &onlineUserList) == SUCCESSFUL)
+    {
+        sendCmd(&tmp, ID);
+    }
+    else
+    {
+        perror("clinentWannaList error: config eneity failure\n");
+        return FAILURE;
+    }
+    
+    return SUCCESSFUL;
 }
 
-Status clientExit(void);
+Status clientExit(int ID)
+{
+    MsgEntity tmp;
+    tmp.object = CMD_EXIT;
+    tmp.flag = SEND_FLAG;
 
-Status sendCmd(MsgEntity *ety, int ID);
-Status sendDlg(MsgEntity *ety, int ID);
+    return sendCmd(&tmp, ID);
+}
 
-Status sendOK(int ID);
-Status sendError(int ID);
+// 用户登陆时，服务器回应Login表示登陆成功，服务器回应Register表示登陆失败
+Status sendLogin(int ID)
+{
+    MsgEntity tmp;
+    tmp.object = CMD_LOGIN;
+    tmp.flag = SEND_FLAG;
+
+    return sendCmd(&tmp, ID);
+}
+
+// 用户注册时，服务器回应Register表示注册成功，服务器回应Login表示注册失败
+Status sendRegister(int ID)
+{
+    MsgEntity tmp;
+    tmp.object = CMD_REGISTER;
+    tmp.flag = SEND_FLAG;
+
+    return sendCmd(&tmp, ID);
+}
+
+Status sendCmd(MsgEntity *ety, int ID)
+{
+    if(NULL == ety)
+    {
+        perror("sendCmd error: pointer is null\n");
+        return FAILURE;
+    }
+
+    MsgContainer tmp;
+    tmp.type = COMMAND;
+    tmp.content = *ety;
+
+    if(send(ID, (void *)&tmp, sizeof(MsgContainer)) == -1)
+    {
+        perror("send Error!");
+        return FAILURE;
+    }
+
+    return SUCCESSFUL;
+}
+
+Status sendDlg(MsgEntity *ety, int ID)
+{
+    if(NULL == ety)
+    {
+        perror("sendCmd error: pointer is null\n");
+        return FAILURE;
+    }
+
+    MsgContainer tmp;
+    tmp.type = DIALOGUE;
+    tmp.content = *ety;
+
+    if(send(ID, (void *)&tmp, sizeof(MsgContainer)) == -1)
+    {
+        perror("send Error!");
+        return FAILURE;
+    }
+
+    return SUCCESSFUL;
+}
+
+Status broadcastList(void)
+{
+    int i;
+    for(i = 0; i < onlineUserList.num; i++)
+    {
+        if(clientWannaList(onlineUserList.user[i].threadID) == FAILURE)
+        {
+            return FAILURE;
+        }
+    }
+
+    return SUCCESSFUL;
+}
+
+Status broadcastDlg(void);
 
 void setThreadID(int ID)
 {
