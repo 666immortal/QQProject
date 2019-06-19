@@ -27,7 +27,7 @@ Status listToString(userList list, char *str); // 将列表连接成串，以空
 // 添加删除用户列表都应该互斥访问，
 // 添加删除用户之后应该刷新各客户端的用户列表
 // 函数返回添加后的索引值
-Status addUser(userList *list, char *name, int *index);
+Status addUser(userList *list, char *name, int ID);
 // 从列表中移除用户之后，记得释放user指针
 Status removeUser(userList *list, int index);
 

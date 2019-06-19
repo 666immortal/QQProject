@@ -139,17 +139,21 @@ Status listToString(userList list, char *str)
     }
 
     int i;
+    char putID[20];
+
+    sprintf(putID, "%d", list.user[0].threadID);
 
     strcpy(str, list.user[0].username);
     strcat(str, " ");
-    strcat(str, itoa(list.user[0].threadID));
+    strcat(str, putID);
 
     for(i = 1; i < list.num; i++)
     {
         strcat(str, " ");
         strcat(str, list.user[i].username);
         strcat(str, " ");
-        strcat(str, itoa(list.user[0].threadID));
+        sprintf(putID, "%d", list.user[i].threadID);
+        strcat(str, putID);
     }
 
     return 0;
@@ -168,7 +172,7 @@ Status addUser(userList *list, char *name, int ID)
     
     list->num++;
 
-    return SUCCESSFUL;
+    return SUCCESSFUL; 
 }
 
 Status removeUser(userList *list, int ID)

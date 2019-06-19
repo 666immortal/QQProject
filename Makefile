@@ -1,12 +1,12 @@
-OBJS=test_UserList.o MsgStruct.o MsgParser.o UserList.o MsgPackager.o UserVerify.o
+OBJS=server.o MsgStruct.o MsgParser.o UserList.o MsgPackager.o UserVerify.o SendFunc.o ServerFunc.o
 CC=gcc
-CFLAGS=-c -g
+CFLAGS=-c
 
 test_Parser:$(OBJS)
-	$(CC) $(OBJS) -o test_UserList
+	$(CC) $(OBJS) -o server -lpthread
 
 %.o:%.c
 	$(CC) $(CFLAGS) $< -o $@
 
 clean:
-	rm -rf test_UserList *.o
+	rm -rf server *.o
