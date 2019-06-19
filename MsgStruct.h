@@ -3,6 +3,8 @@
 
 #include "BasisMacro.h"
 
+// 群发消息标志
+#define BOARDCAST 0
 // 发送接收标志
 typedef enum
 {
