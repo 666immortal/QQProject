@@ -1,19 +1,31 @@
 #include "ServerFunc.h"
+#include <pthread.h>
 
+// 外部变量，在线用户列表
 extern userList onlineUserList;
+// __thread local 线程局部变量，每个线程都拥有一份对变量的拷贝
+static __thread threadStatus state;
+// 文件互斥锁，互斥访问文件
+pthread_mutex_t file_mutex;
+// 列表互斥锁，互斥修改列表，即使只是读取也需要互斥，防止读取的过程中被修改
+pthread_mutex_t list_mutex;
 
-static threadStatus state;
+#define ONLINE  1  // 上线状态
+#define OFFLINE 0  // 下线状态
 
-#define ONLINE  1
-#define OFFLINE 0
+void setThreadID(int ID);  // 设置线程（用户）ID
+void setThreadState(int onlineOrNot); // 设置线程（用户）状态
+int getThreadID(void); // 获取线程（用户）ID
+int getThreadState(void); // 获取线程（用户）状态
 
-void setThreadID(int ID);
-void setThreadState(int onlineOrNot);
-int getThreadID(void);
-int getThreadState(void);
-
+// 线程服务函数（接收数据包，处理数据包）
 void *serverClient(void* arg)
 {
+    // 初始化文件互斥锁
+    pthread_mutex_init(&file_mutex, NULL);
+    // 初始化列表互斥锁
+    pthread_mutex_init(&list_mutex, NULL);
+
     state.online = FAILURE;
     state.ID = -1;
     int theClient = *(int*)arg;
@@ -66,23 +78,25 @@ Status unPack(MsgContainer package)
             {
                 if(clientRegister(info.nameAndPwd) == SUCCESSFUL)
                 {
+                    pthread_mutex_lock(&list_mutex);
                     addUser(&onlineUserList, info.nameAndPwd.username, &index);
+                    pthread_mutex_unlock(&list_mutex);
                     setThreadID(index);
                     setThreadState(ONLINE);
-                    sendOK();
+                    sendOK(getThreadID());
                     // 更新所有用户列表
                     // 待补充。。。。。。。。。。。。。。。。通过群发命令包更新
                 }
                 else
                 {
                     printf("Register failure\n");
-                    sendError();
+                    sendError(getThreadID());
                 }                
             }
             else
             {
                 printf("User has been online\n");
-                sendError();
+                sendError(getThreadID());
             }
             break;
         case CMD_LOGIN:
@@ -90,23 +104,25 @@ Status unPack(MsgContainer package)
             {
                 if(clientLogin(info.nameAndPwd) == SUCCESSFUL)
                 {
+                    pthread_mutex_lock(&list_mutex);
                     addUser(&onlineUserList, info.nameAndPwd.username, &index);
+                    pthread_mutex_unlock(&list_mutex);
                     setThreadID(index);
                     setThreadState(ONLINE);
-                    sendOK();
+                    sendOK(getThreadID());
                     // 更新所有用户列表
                     // 待补充。。。。。。。。。。。。。。。。通过群发命令包更新
                 }
                 else
                 {
                     printf("Can't match\n");
-                    sendError();
+                    sendError(getThreadID());
                 }                
             }
             else
             {
                 printf("User has been online\n");
-                sendError();
+                sendError(getThreadID());
             }
             break;
         case CMD_GETLIST:
@@ -117,7 +133,9 @@ Status unPack(MsgContainer package)
             {
                 if(clientExit() == SUCCESSFUL)
                 {
+                    pthread_mutex_lock(&list_mutex);
                     removeUser(&onlineUserList, getThreadID());
+                    pthread_mutex_unlock(&list_mutex);
                     // 更新其他线程的ID，因为注销这个用户之后，其他用户的ID号随之更改
                     // 待补充。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。
                     // 更新所有用户列表
@@ -127,7 +145,7 @@ Status unPack(MsgContainer package)
             else
             {
                 printf("The user had been offline\n");
-                sendError();
+                sendError(getThreadID());
             }            
             break;
         default:
@@ -145,6 +163,7 @@ Status unPack(MsgContainer package)
 
 Status clientRegister(userVerify info)
 {
+    pthread_mutex_lock(&file_mutex);
     FILE *fp;
     if(fp = fopen("userdata.txt", "a") == NULL)
     {
@@ -165,6 +184,7 @@ Status clientRegister(userVerify info)
         printf("clientRegiser errors in closing file\n");
         return FAILURE;
     }
+    pthread_mutex_unlock(&file_mutex);
 
     return SUCCESSFUL;
 }
@@ -210,8 +230,8 @@ Status clientWannaList(userList list)
 
 Status clientExit(void);
 
-Status sendOK(void);
-Status sendError(void);
+Status sendOK(int ID);
+Status sendError(int ID);
 
 void setThreadID(int ID)
 {

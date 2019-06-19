@@ -7,7 +7,7 @@
 typedef struct
 {
     string username;
-    int index;
+    int threadID;
 }userStruct;
 
 // 在线用户列表
