@@ -54,7 +54,6 @@ Status analysisCmdEty(MsgEntity *entity, int *Msgtype, Stnparser *container)
     {
     case CMD_LOGIN:
     case CMD_REGISTER:
-        initUserVerify(&container->nameAndPwd);
         analysisLogRegCmd(entity->details, &container->nameAndPwd);
         res = SUCCESSFUL;
         break;
@@ -86,11 +85,6 @@ Status endAnalysis(int Msgtype, Stnparser *container)
     {
         printf("endAnalysis error: pointer is null");
         return FAILURE;
-    }
-
-    if(Msgtype == CMD_LOGIN || Msgtype == CMD_REGISTER)
-    {
-        deleteUserVerify(&container->nameAndPwd);
     }
     else if(Msgtype == CMD_GETLIST)
     {

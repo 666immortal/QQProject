@@ -8,7 +8,7 @@ Status initUser(userStruct *user)
         return FAILURE;
     }
 
-    user->index = 0;
+    user->threadID = 0;
     user->username = (char *)malloc(sizeof(char)*NAME_MAX_LEN);
 
     return SUCCESSFUL;
@@ -70,7 +70,7 @@ Status makeUserList(const char *str, userList *list)
         return FAILURE;
     }
 
-    int i = 0, k = 0, n = 0;
+    int i = 0, k = 0, n = 0, ctr = 0;
     char tmp[NAME_MAX_LEN];
 
     while ('\0' != str[i])
@@ -82,19 +82,26 @@ Status makeUserList(const char *str, userList *list)
         }
         else
         {
-            tmp[k] = '\0';
-            strcpy(list->user[n].username, tmp);
-            list->user[n].index = n;
-            n++;
+            if(0 == ctr)
+            {
+                tmp[k] = '\0';
+                strcpy(list->user[n].username, tmp);
+                ctr = 1;
+            }
+            else
+            {
+                tmp[k] = '\0';
+                list->user[n].threadID = atoi(tmp);
+                n++;
+                ctr = 0;
+            }           
             k = 0;
-        }
-        
+        }       
         i++;
     }
 
     tmp[k] = '\0';
-    strcpy(list->user[n].username, tmp);
-    list->user[n].index = n;
+    list->user[n].threadID = atoi(tmp);
     n++;
     list->num = n;
 
@@ -112,7 +119,7 @@ Status showUserList(userList list)
 
     for(i = 0; i < list.num; i++)
     {
-        printf("No.%d: %s\n", list.user[i].index + 1, list.user[i].username);
+        printf("ID.%d: %s\n", list.user[i].threadID, list.user[i].username);
     }
 
     return SUCCESSFUL;
@@ -134,17 +141,21 @@ Status listToString(userList list, char *str)
     int i;
 
     strcpy(str, list.user[0].username);
+    strcat(str, " ");
+    strcat(str, itoa(list.user[0].threadID));
 
     for(i = 1; i < list.num; i++)
     {
         strcat(str, " ");
         strcat(str, list.user[i].username);
+        strcat(str, " ");
+        strcat(str, itoa(list.user[0].threadID));
     }
 
     return 0;
 }
 
-Status addUser(userList *list, char *name, int *index)
+Status addUser(userList *list, char *name, int ID)
 {
     if(list->num >= USER_MAX_NUM)
     {
@@ -153,19 +164,14 @@ Status addUser(userList *list, char *name, int *index)
     }
 
     strcpy(list->user[list->num].username, name);
-    list->user[list->num].index = list->num;
-    
-    if(index != NULL)
-    {
-        *index = list->num;
-    }
+    list->user[list->num].threadID = ID;
     
     list->num++;
 
     return SUCCESSFUL;
 }
 
-Status removeUser(userList *list, int index)
+Status removeUser(userList *list, int ID)
 {
     if(list->num <= 0)
     {
@@ -174,10 +180,21 @@ Status removeUser(userList *list, int index)
     }
 
     int i;
-    for(i = index; i < list->num - 1; i++)
+    for(i = 0; i < list->num; i++)
+    {
+        if(list->user->threadID == ID)
+            break;
+    }
+
+    if(i >= list->num)
+    {
+        printf("No such user in list\n");
+        return FAILURE;
+    }
+
+    for(; i < list->num - 1; i++)
     {
         list->user[i] = list->user[i + 1];  
-        list->user[i].index--;
     }
 
     list->num--;

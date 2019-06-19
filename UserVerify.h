@@ -6,12 +6,11 @@
 // 验证信息，包括用户名和密码
 typedef struct
 {
-    string username;
-    string password;
+    char username[NAME_MAX_LEN];
+    char password[PWD_MAX_LEN];
 }userVerify;
 
-Status initUserVerify(userVerify *user);
-Status deleteUserVerify(userVerify *user);
+Status setUserVerify(userVerify *user, char *name, char *pwd);
 void showUserVerify(userVerify user);
 
 #endif

@@ -36,6 +36,8 @@ void *serverClient(void* arg)
     {
         perror("send Error!");
     }*/
+    // 设置好进程的ID号
+    setThreadID(theClient);
 
     do
     {
@@ -79,9 +81,8 @@ Status unPack(MsgContainer package)
                 if(clientRegister(info.nameAndPwd) == SUCCESSFUL)
                 {
                     pthread_mutex_lock(&list_mutex);
-                    addUser(&onlineUserList, info.nameAndPwd.username, &index);
+                    addUser(&onlineUserList, info.nameAndPwd.username, getThreadID());
                     pthread_mutex_unlock(&list_mutex);
-                    setThreadID(index);
                     setThreadState(ONLINE);
                     sendOK(getThreadID());
                     // 更新所有用户列表
@@ -105,9 +106,8 @@ Status unPack(MsgContainer package)
                 if(clientLogin(info.nameAndPwd) == SUCCESSFUL)
                 {
                     pthread_mutex_lock(&list_mutex);
-                    addUser(&onlineUserList, info.nameAndPwd.username, &index);
+                    addUser(&onlineUserList, info.nameAndPwd.username, getThreadID());
                     pthread_mutex_unlock(&list_mutex);
-                    setThreadID(index);
                     setThreadState(ONLINE);
                     sendOK(getThreadID());
                     // 更新所有用户列表
@@ -126,7 +126,7 @@ Status unPack(MsgContainer package)
             }
             break;
         case CMD_GETLIST:
-            /* code */
+            onlineUserList = info.list;
             break;
         case CMD_EXIT:
             if(getThreadState() == ONLINE)
@@ -191,6 +191,7 @@ Status clientRegister(userVerify info)
 
 Status clientLogin(userVerify info)
 {
+    pthread_mutex_lock(&file_mutex);
     FILE *fp;
     char tmpName[NAME_MAX_LEN];
     char tmpPwd[PWD_MAX_LEN];
@@ -214,6 +215,7 @@ Status clientLogin(userVerify info)
         printf("clientLogin errors in closing file\n");
         return FAILURE;
     }
+    pthread_mutex_unlock(&file_mutex);
 
     if(res == FAILURE)
     {
@@ -229,6 +231,9 @@ Status clientWannaList(userList list)
 }
 
 Status clientExit(void);
+
+Status sendCmd(MsgEntity *ety, int ID);
+Status sendDlg(MsgEntity *ety, int ID);
 
 Status sendOK(int ID);
 Status sendError(int ID);

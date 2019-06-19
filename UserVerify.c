@@ -1,29 +1,16 @@
 #include "UserVerify.h"
 
-Status initUserVerify(userVerify *user)
+Status setUserVerify(userVerify *user, char *name, char *pwd)
 {
     if(NULL == user)
     {
-        printf("initUserVerify error: pointer is null");
+        printf("setUserVerify error: pointer is null\n");
         return FAILURE;
     }
 
-    user->username = (char *)malloc(sizeof(char)*NAME_MAX_LEN);
-    user->password = (char *)malloc(sizeof(char)*PWD_MAX_LEN);
-
-    return SUCCESSFUL;
-}
-
-Status deleteUserVerify(userVerify *user)
-{
-    if(NULL == user)
-    {
-        printf("deleteUserVerify error: pointer is null");
-        return FAILURE;
-    }
-    free(user->username);
-    free(user->password);
-
+    strcpy(user->username, name);
+    strcpy(user->password, pwd);
+    
     return SUCCESSFUL;
 }
 
