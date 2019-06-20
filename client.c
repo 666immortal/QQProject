@@ -42,7 +42,7 @@ void main()
 
   pthread_t tid;
 
-  int res = pthread_create(&tid, NULL, processRecv, (void *)socket);
+  int res = pthread_create(&tid, NULL, processRecv, (void*)&sockfd);
   if(res != 0)
   {
     printf("error!%d\n", res);
@@ -104,7 +104,10 @@ void *processRecv(void *arg)
       }
       else
       {
-          showMsgContainer(tmp);
+        printf("--------------------------\n");
+        printf("I receive a package:\n");
+        showMsgContainer(tmp);
+        printf("--------------------------\n");
       }
     }    
   }while (bytesNum > 0);  

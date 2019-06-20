@@ -73,9 +73,7 @@ Status configUserListEty(MsgEntity *entity, userList *list)
     }
 
     char jointStr[DETAILS_LEN];
-    
     listToString(*list, jointStr);
-
     entity->object = CMD_GETLIST;
     entity->flag = list->num;
     strcpy(entity->details, jointStr);

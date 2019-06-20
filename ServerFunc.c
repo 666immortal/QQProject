@@ -56,7 +56,9 @@ void *serverClient(void* arg)
             else
             {
                 // 解析数据包并执行操作
+                printf("--------------------\n");
                 showMsgContainer(*(MsgContainer*)buf);
+                printf("--------------------\n");
                 unPack(*(MsgContainer*)buf);
             }
         }    
@@ -82,7 +84,7 @@ Status unPack(MsgContainer package)
         case CMD_REGISTER:  // 用户发来注册命令
             if(getThreadState() == ONLINE) // 如果已经上线，判断为错误包，丢弃
             {
-                perror("User has been online\n");
+                printf("User has been online\n");
                 sendLogin(getThreadID());  // 发送注册失败信息到客户端
                 res = FAILURE;
                 break;
@@ -104,7 +106,7 @@ Status unPack(MsgContainer package)
             }
             else
             {
-                perror("Register failure\n");
+                printf("Register failure\n");
                 sendLogin(getThreadID());  // 发送注册失败消息
                 res = FAILURE;
             }                            
@@ -112,7 +114,7 @@ Status unPack(MsgContainer package)
         case CMD_LOGIN:
             if(getThreadState() == ONLINE)  // 如果用户已经上线，判断为错误包，丢弃
             {
-                perror("User has been online\n");
+                printf("User has been online\n");
                 sendRegister(getThreadID());  // 发送登陆失败信息到客户端
                 res = FAILURE;
                 break;
@@ -134,7 +136,7 @@ Status unPack(MsgContainer package)
             }
             else // 登陆失败，查找不到此用户
             {
-                perror("Can't match\n");
+                printf("Can't match\n");
                 sendRegister(getThreadID()); // 用户名或密码不对，发送错误
                 res = FAILURE;
             }                
@@ -142,7 +144,7 @@ Status unPack(MsgContainer package)
         case CMD_GETLIST:
             if(getThreadState() == OFFLINE)
             {
-                perror("Please login first\n");
+                printf("Please login first\n");
                 res = FAILURE;
                 break;
             }
@@ -152,20 +154,21 @@ Status unPack(MsgContainer package)
         case CMD_EXIT:
             if(getThreadState() == OFFLINE)
             {
-                perror("The user had been offline\n");
+                printf("The user had been offline\n");
                 res = FAILURE;
+                break;
             }
 
             pthread_mutex_lock(&list_mutex);
             res = removeUser(&onlineUserList, getThreadID());
             pthread_mutex_unlock(&list_mutex);
-            if(res == SUCCESSFUL)
+            if(res == SUCCESSFUL && onlineUserList.num > 0)
                 pthread_mutex_lock(&list_mutex);
                 res = broadcastList(&onlineUserList);
                 pthread_mutex_unlock(&list_mutex);
             if(clientExit(getThreadID()) == FAILURE)
             {
-                perror("Client exit error\n");
+                printf("Client exit error\n");
                 res = FAILURE;
             }          
             setThreadState(OFFLINE);                
@@ -201,7 +204,7 @@ Status clientRegister(userVerify info)
 {
     if(strlen(info.username) >= NAME_MAX_LEN || strlen(info.password) >= PWD_MAX_LEN)
     {
-        perror("clientRegister error: name or password is too long\n");
+        printf("clientRegister error: name or password is too long\n");
         return FAILURE;
     }
 
@@ -215,7 +218,7 @@ Status clientRegister(userVerify info)
     FILE *fp;
     if((fp = fopen("userdata", "a")) == NULL)
     {
-        perror("clientRegister opens file error\n");
+        printf("clientRegister opens file error\n");
         return FAILURE;
     }
 
@@ -223,7 +226,7 @@ Status clientRegister(userVerify info)
 
     if(fclose(fp) != 0)
     {
-        perror("clientRegiser errors in closing file\n");
+        printf("clientRegiser errors in closing file\n");
         return FAILURE;
     }
     pthread_mutex_unlock(&file_mutex);
@@ -242,22 +245,36 @@ Status searchInFile(userVerify info)
 
     if((fp = fopen("userdata", "r+")) == NULL)
     {
-        perror("searchInFile opens file error\n");
+        printf("searchInFile opens file error\n");
         return FAILURE;
     }
 
     rewind(fp);
 
-    while (fscanf(fp, "%s#%s", tmpName, tmpPwd) == 1)
+    while (fscanf(fp, "%s", tmp) == 1)
     {        
+        int i = 0;
+        while (tmp[i] != '#')
+        {
+            tmpName[i] = tmp[i];
+            i++;
+        }
+
+        tmpName[i] = '\0';
+        i++;
+        strcpy(tmpPwd, &tmp[i]);   
+        
         if(strcmp(info.username, tmpName) == 0)
             if(strcmp(info.password, tmpPwd) == 0)
+            {
                 res = SUCCESSFUL;
+                break;
+            }              
     }
     
     if(fclose(fp) != 0)
     {
-        perror("searchInFile errors in closing file\n");
+        printf("searchInFile errors in closing file\n");
         return FAILURE;
     }
     pthread_mutex_unlock(&file_mutex);
@@ -284,7 +301,7 @@ Status clientWannaList(int ID)
     }
     else
     {
-        perror("clinentWannaList error: config eneity failure\n");
+        printf("clinentWannaList error: config eneity failure\n");
         res = FAILURE;
     }
     

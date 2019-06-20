@@ -84,7 +84,7 @@ Status broadcastList(userList *list)
 {
     int i;
     MsgEntity tmp;
-    if(configUserListEty(&tmp, &list) == SUCCESSFUL)
+    if(configUserListEty(&tmp, list) == SUCCESSFUL)
     {
         for(i = 0; i < list->num; i++)
         {

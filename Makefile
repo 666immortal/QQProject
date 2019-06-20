@@ -5,11 +5,11 @@ CFLAGS=-c
 
 all:server client
 
-client:$(CLI_OBJS)
-	$(CC) $(CLI_OBJS) -o client -lpthread
-
 server:$(SER_OBJS)
 	$(CC) $(SER_OBJS) -o server -lpthread
+
+client:$(CLI_OBJS)
+	$(CC) $(CLI_OBJS) -o client -lpthread
 
 %.o:%.c
 	$(CC) $(CFLAGS) $< -o $@
