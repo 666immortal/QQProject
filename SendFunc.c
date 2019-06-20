@@ -108,7 +108,7 @@ Status broadcastDlg(userList *list, MsgEntity *ety, int ID)
 {
     MsgEntity tmp;
     tmp.object = ID;
-    tmp.flag = SEND_FLAG;
+    tmp.flag = RECV_FLAG;
     strcpy(tmp.details, ety->details);
 
     int i;
