@@ -105,12 +105,6 @@ Status remindForReceive(MsgEntity *ety, int from)
     return SUCCESSFUL;
 }
 
-Status respondReady()
-{
-
-    return SUCCESSFUL;
-}
-
 Status forwardFile(MsgEntity *ety)
 {
     if(NULL == ety)

@@ -44,40 +44,113 @@ void main()
   bzero(&(serv_addr.sin_zero),8);
   if(connect(sockfd,(struct sockaddr *)&serv_addr,sizeof(struct sockaddr))==-1)
   {
-      perror("connect Error!");
+      perror("network connect Error!");
       exit(1);
   }
+
+
+  printf("----------- 请先登陆/注册 -----------\n");
+  printf("1.登陆\n2.注册\n");
+  printf("-------------------------------\n");
+
 
   pthread_t tid;
 
   int res = pthread_create(&tid, NULL, processRecv, (void*)&sockfd);
   if(res != 0)
   {
-    printf("error!%d\n", res);
+    printf("create thread in main error!%d\n", res);
     exit(1);
   }
-  
-  while(1)
+
+  int cycle = 1;
+  while(cycle)
   {
     int type;
-    int type_type;
-    char str[200];
+    int bagType;
+    int object;
+    char str[DETAILS_LEN];
     int flag;
 
-    printf("Please input data to send to server:\n");
-    printf("类型：\n");
+    printf("----------- 请输入命令 -----------\n");
+    printf("1.获取用户列表\n2.文件传输\n3.发送私信\n4.群发消息\n5.退出");
+    printf("-------------------------------\n");
+
     scanf("%d", &type);
-    printf("类型的类型：\n");
-    scanf("%d", &type_type);
-    printf("内容: \n");
-    //s_gets(str, DETAILS_LEN);
-    scanf("%s", str);
-    printf("标志: \n");
-    scanf("%d", &flag);
+    switch (type)
+    {
+    case 1:  // 获取用户列表   
+      bagType = COMMAND;
+      object = CMD_GETLIST;
+      strcpy(str, "");
+      flag = SEND_FLAG;
+      break;
+    case 2:  // 文件传输
+      printf("请输入文件的发送对象（输入用户序号）：\n");
+      scanf("%d", &object);
+      while (searchNameInUserList(&cast, object) == NULL)
+      {
+        printf("输入序号有误，请重新输入：\n");
+        printf("---------- 用户列表 ------------\n");
+        showUserList(cast);
+        printf("----------------------------\n");
+        scanf("%d", &object);
+      }
+
+      printf("请输入文件名：\n");
+      scanf("%s", str);
+      bagType = COMMAND;
+      object = CMD_SEND_FILE;
+      strcpy(str, "");
+      flag = object;
+      pthread_t tid;
+      pthread_create(&tid, NULL, sendFileThread, (void*)object);
+      break;
+    case 3:  // 发送私信
+      printf("请输入信息的发送对象（输入用户序号）：\n");
+      scanf("%d", &flag);
+      while (searchNameInUserList(&cast, flag) == NULL)
+      {
+        printf("输入序号有误，请重新输入：\n");
+        printf("---------- 用户列表 ------------\n");
+        showUserList(cast);
+        printf("----------------------------\n");
+        scanf("%d", &flag);
+      }
+      printf("请输入要发送的消息：\n");
+      fgets(str, DETAILS_LEN, stdin);
+      bagType = DIALOGUE;
+      object = 0;
+      break;
+    case 4:  // 群发消息
+      printf("请输入信息的发送对象（输入用户序号）：\n");
+      scanf("%d", &object);
+      while (searchNameInUserList(&cast, object) == NULL)
+      {
+        printf("输入序号有误，请重新输入：\n");
+        printf("---------- 用户列表 ------------\n");
+        showUserList(cast);
+        printf("----------------------------\n");
+        scanf("%d", &object);
+      }
+      printf("请输入要发送的消息：\n");
+      fgets(str, DETAILS_LEN, stdin);
+      bagType = DIALOGUE;
+      flag = SEND_FLAG;
+      break;
+    case 5:  // 退出
+      object = CMD_EXIT;
+      strcpy(str, "");
+      flag = SEND_FLAG;
+      cycle = 0;
+      break;    
+    default:
+      break;
+    }
 
     MsgContainer tmp;
     tmp.type = type;
-    tmp.content.object = type_type;
+    tmp.content.object = object;
     strcpy(tmp.content.details, str);
     tmp.content.flag =  flag;
 
@@ -128,15 +201,21 @@ void *processRecv(void *arg)
             {
             case CMD_GETLIST:
               makeUserList(tmp.content.details, &cast);
+              printf("---------- 更新用户列表 ------------\n");
               showUserList(cast);
+              printf("----------           ------------\n");
               break;
             case CMD_SEND_FILE:  // 接收文件指令
-              etyPoint = &tmp.content;
+              printf(" %s 向你发送文件 %s，按下回车键接收：", 
+                                tmp.content.flag, tmp.content.details);
               pthread_t tid;
+              etyPoint = (MsgEntity*)malloc(sizeof(MsgEntity));
+              *etyPoint = tmp.content;
               pthread_create(&tid, NULL, recvFileThread, NULL);
               break;
             case CMD_TRANSFERING:
-              etyPoint = &tmp.content;
+              etyPoint = (MsgEntity*)malloc(sizeof(MsgEntity));
+              *etyPoint = tmp.content;
               pthread_mutex_lock(&conLock);
               pthread_cond_signal(&threadCon);
               pthread_mutex_unlock(&conLock);
@@ -176,22 +255,28 @@ void *processRecv(void *arg)
 void *recvFileThread(void *arg)
 {
   int len = 0;
+  int lenShouldBe = 0;
+  char lastChar;
   // fp指针创建文件
   if(readyForRecvFile(etyPoint->details))
-  {
+  {   
     clientSendReady(etyPoint->flag);
-
+    free(etyPoint);
     do
     {
+      // 因为要释放内存，所以提前把需要的值取出
+      lenShouldBe = etyPoint->flag;
+      lastChar = etyPoint->details[DETAILS_LEN - 1];
       pthread_mutex_lock(&conLock);
       pthread_cond_wait(&threadCon, &conLock);
       len = recvFilefrom(etyPoint);
+      free(etyPoint);
       pthread_mutex_unlock(&conLock);
-      if(len != etyPoint->flag)
+      if(len != lenShouldBe)
       {
         printf("recv file segment error: send and recv not match\n");
       }
-    }while (len == DETAILS_LEN && etyPoint->details[DETAILS_LEN - 1] != EOF);
+    }while (len == DETAILS_LEN && lastChar != EOF);
 
     finishFileTask();
   }
@@ -205,10 +290,9 @@ void *sendFileThread(void *arg)
   {
     pthread_mutex_lock(&readyLock);
     pthread_cond_wait(&readyCon, &readyLock);
-
-    while(sendFileFor(ID) == DETAILS_LEN);
-
     pthread_mutex_unlock(&readyLock);
+    while(sendFileFor(ID) == DETAILS_LEN);    
+    finishFileTask();
   }  
 }
 
@@ -248,7 +332,7 @@ Status readyForSendFile(char *str)
   fp = fopen(str, "rb");
   if(fp == NULL)
   {
-    printf("Create File failure\n");
+    printf("Open File failure\n");
     return FAILURE;
   }  
 
