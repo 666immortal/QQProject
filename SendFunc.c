@@ -5,6 +5,7 @@ Status sendLogin(int ID)
 {
     MsgEntity tmp;
     tmp.object = CMD_LOGIN;
+    strcpy(tmp.details, "");
     tmp.flag = SEND_FLAG;
 
     return sendCmd(&tmp, ID);
@@ -15,6 +16,7 @@ Status sendRegister(int ID)
 {
     MsgEntity tmp;
     tmp.object = CMD_REGISTER;
+    strcpy(tmp.details, "");
     tmp.flag = SEND_FLAG;
 
     return sendCmd(&tmp, ID);

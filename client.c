@@ -9,7 +9,7 @@
 #include <sys/socket.h>
 #include <pthread.h>
 
-#define CLIENT_IPADDR "127.0.0.1"
+#define CLIENT_IPADDR "172.21.128.189"
 #define SERVPORT 1012
 
 userList cast;
@@ -20,6 +20,7 @@ pthread_mutex_t conLock;
 pthread_cond_t threadCon;
 pthread_cond_t readyCon;
 pthread_cond_t readyLock;
+int myID;
 
 void main()
 {
@@ -48,11 +49,52 @@ void main()
       exit(1);
   }
 
+  myID = sockfd;
 
+  int select = 0;
+  char username[NAME_MAX_LEN];
+  char password[PWD_MAX_LEN];
+
+while (1)
+{
   printf("----------- 请先登陆/注册 -----------\n");
   printf("1.登陆\n2.注册\n");
   printf("-------------------------------\n");
+  scanf("%d", select);
+  printf("请输入用户名：\n");
+  scanf("%s", username);
+  printf("请输入密码：\n");
+  scanf("%s", password);
+  MsgEntity tmp;
+  if(select == 1)
+  {    
+    configLoginEty(&tmp, username, password);
+  }
+  else if(select == 2)
+  {
+    configRegisterEty(&tmp, username, password);
+  }
+  else
+  {
+    printf("输入有误，请重新输入\n");
+    continue;
+  }
+  sendCmd(&tmp, myID);
 
+  int bytesNum;
+  MsgContainer tmp;
+  memset((char*)&tmp,0,sizeof(tmp));
+  bytesNum = recv(socket,(void *)&tmp,sizeof(MsgContainer),0);
+  if(tmp.object == (select - 3))
+  {
+    printf("成功\n");
+    break;
+  }
+  else
+  {
+    printf("失败，请重试");
+  }
+}
 
   pthread_t tid;
 

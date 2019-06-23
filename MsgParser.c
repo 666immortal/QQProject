@@ -60,7 +60,6 @@ Status analysisCmdEty(MsgEntity *entity, int *Msgtype, Stnparser *container)
         initUserList(&container->list);
         res  = analysisUserListCmd(entity->details, &container->list);        
         break;
-    case CMD_END_FILE:
     case CMD_SEND_FILE:
         printf("File Process\n");
         res = SUCCESSFUL;
