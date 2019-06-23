@@ -197,6 +197,8 @@ void *processRecv(void *arg)
         printf("--------------------------\n");
         if(tmp.type == COMMAND)
         {
+            char who[NAME_MAX_LEN];
+            pthread_t tid;
             switch (tmp.content.object)
             {
             case CMD_GETLIST:
@@ -205,10 +207,9 @@ void *processRecv(void *arg)
               showUserList(cast);
               printf("----------           ------------\n");
               break;
-            case CMD_SEND_FILE:  // 接收文件指令
-              printf(" %s 向你发送文件 %s，按下回车键接收：", 
-                                tmp.content.flag, tmp.content.details);
-              pthread_t tid;
+            case CMD_SEND_FILE:
+              strcpy(who, searchNameInUserList(&cast, tmp.content.flag));              
+              printf(" %s 向你发送文件 %s，按下回车键接收：", who, tmp.content.details);
               etyPoint = (MsgEntity*)malloc(sizeof(MsgEntity));
               *etyPoint = tmp.content;
               pthread_create(&tid, NULL, recvFileThread, NULL);
