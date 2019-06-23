@@ -1,30 +1,38 @@
-#include<stdio.h>
-#include<stdlib.h>
-#include<errno.h>
-#include<string.h>
-#include<netdb.h>
-#include<sys/types.h>
-#include<netinet/in.h>
-#include<sys/socket.h>
+#include "client.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <string.h>
+#include <netdb.h>
+#include <sys/types.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
 #include <pthread.h>
-
-#include "MsgStruct.h"
-#include "MsgParser.h"
-#include "MsgPackager.h"
 
 #define CLIENT_IPADDR "127.0.0.1"
 #define SERVPORT 1012
-#define MAXDATASIZE 100;
 
-char *s_gets(char *st, int n);
-void *processRecv(void *arg);
+userList cast;
+FILE *fp;
+MsgEntity *etyPoint; 
+pthread_mutex_t fileLock;
+pthread_mutex_t conLock;
+pthread_cond_t threadCon;
+pthread_cond_t readyCon;
+pthread_cond_t readyLock;
 
 void main()
 {
+  pthread_mutex_init(&fileLock, NULL);
+  pthread_mutex_init(&conLock, NULL);
+  pthread_mutex_init(&readyLock, NULL);
+  pthread_cond_init(&threadCon, NULL);
+  pthread_cond_init(&readyCon, NULL);
+  initUserList(&cast);
   int sockfd,sendbytes;
   char buf[100];
   struct sockaddr_in serv_addr;
-  
+
   if((sockfd = socket(AF_INET,SOCK_STREAM,0)) == -1)
   {
       perror("create socket Error!");
@@ -81,6 +89,11 @@ void main()
       exit(1);
     }
   }
+
+  pthread_mutex_destroy(&conLock);
+  pthread_mutex_destroy(&fileLock);
+  pthread_cond_destroy(&threadCon);
+  deleteUserList(&cast);
 }
 
 void *processRecv(void *arg)
@@ -100,6 +113,7 @@ void *processRecv(void *arg)
     {          
       if(bytesNum <= 0)
       {
+          printf("与服务器断开连接\n");
           break;
       }
       else
@@ -108,26 +122,166 @@ void *processRecv(void *arg)
         printf("I receive a package:\n");
         showMsgContainer(tmp);
         printf("--------------------------\n");
+        if(tmp.type == COMMAND)
+        {
+            switch (tmp.content.object)
+            {
+            case CMD_GETLIST:
+              makeUserList(tmp.content.details, &cast);
+              showUserList(cast);
+              break;
+            case CMD_SEND_FILE:  // 接收文件指令
+              etyPoint = &tmp.content;
+              pthread_t tid;
+              pthread_create(&tid, NULL, recvFileThread, NULL);
+              break;
+            case CMD_TRANSFERING:
+              etyPoint = &tmp.content;
+              pthread_mutex_lock(&conLock);
+              pthread_cond_signal(&threadCon);
+              pthread_mutex_unlock(&conLock);
+              break;
+            case CMD_READY:
+              pthread_mutex_lock(&readyLock);
+              pthread_cond_signal(&readyCon);
+              pthread_mutex_unlock(&readyLock);
+              break;
+            default:
+              break;
+            }
+        }
+        else if(tmp.type == DIALOGUE)
+        {
+            if(tmp.content.object == 0)
+            {
+              char *name = searchNameInUserList(&cast, tmp.content.flag);
+              printf("------------------------");
+              printf(" %s 对全部人说: %s\n", name, tmp.content.details);
+              printf("------------------------");
+            }
+            else
+            {
+              char *name = searchNameInUserList(&cast, tmp.content.object);
+              printf("------------------------");
+              printf("%s 对你说: %s\n", name, tmp.content.details);
+              printf("------------------------");
+            }
+            
+        }
       }
     }    
   }while (bytesNum > 0);  
 }
 
-char *s_gets(char *st, int n)
+void *recvFileThread(void *arg)
 {
-  char *ret_val;
-  int  i = 0;
-
-  ret_val = fgets(st, n, stdin);
-  if(ret_val)
+  int len = 0;
+  // fp指针创建文件
+  if(readyForRecvFile(etyPoint->details))
   {
-    while(st[i] != '\n' && st[i] != '\0')
-      i++;
-    if(st[i] == '\n')
-      st[i] = '\0';
-    else
-      while(getchar() != '\n')
-        continue;
+    clientSendReady(etyPoint->flag);
+
+    do
+    {
+      pthread_mutex_lock(&conLock);
+      pthread_cond_wait(&threadCon, &conLock);
+      len = recvFilefrom(etyPoint);
+      pthread_mutex_unlock(&conLock);
+      if(len != etyPoint->flag)
+      {
+        printf("recv file segment error: send and recv not match\n");
+      }
+    }while (len == DETAILS_LEN && etyPoint->details[DETAILS_LEN - 1] != EOF);
+
+    finishFileTask();
   }
-  return ret_val;
+}
+
+void *sendFileThread(void *arg)
+{
+  int ID = *(int*)arg;
+
+  if(readyForSendFile(etyPoint->details) == SUCCESSFUL)
+  {
+    pthread_mutex_lock(&readyLock);
+    pthread_cond_wait(&readyCon, &readyLock);
+
+    while(sendFileFor(ID) == DETAILS_LEN);
+
+    pthread_mutex_unlock(&readyLock);
+  }  
+}
+
+int putStreamIntoFile(char *stream, int len)
+{
+    int res;
+    res = fwrite(stream, sizeof(char), len, fp);
+
+    return res;
+}
+
+// 返回的就是读取到的长度
+int getStreamFromFile(char *stream)
+{
+  int len = 0;
+  len = fread(stream, sizeof(char), DETAILS_LEN, fp);
+
+  return len;
+}
+
+Status readyForRecvFile(char *str)
+{
+  pthread_mutex_lock(&fileLock);
+  fp = fopen(str, "wb");
+  if(fp == NULL)
+  {
+    printf("Create File failure\n");
+    return FAILURE;
+  }
+
+  return SUCCESSFUL;
+}
+
+Status readyForSendFile(char *str)
+{
+  pthread_mutex_lock(&fileLock);
+  fp = fopen(str, "rb");
+  if(fp == NULL)
+  {
+    printf("Create File failure\n");
+    return FAILURE;
+  }  
+
+  return SUCCESSFUL;
+}
+
+void finishFileTask()
+{
+    fclose(fp);
+    pthread_mutex_unlock(&fileLock);
+}
+
+int sendFileFor(int ID)
+{
+    int len;    
+    MsgEntity tmp;
+    tmp.object = CMD_TRANSFERING;
+    len = getStreamFromFile(tmp.details);
+    tmp.flag = len;
+    sendCmd(&tmp, ID);  
+
+    return len;
+}
+
+int recvFilefrom(MsgEntity *ety)
+{
+    int len = 0;
+    if(NULL == ety)
+    {
+      return 0;
+    }
+
+    len = putStreamIntoFile(ety->details, ety->flag);
+
+    return len;
 }

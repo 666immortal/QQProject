@@ -30,6 +30,23 @@ Status setDialogue(MsgEntity *dlg, int forWho, char *str, MsgFlag flag)
     return SUCCESSFUL;
 }
 
+Status configSendFileCmd(MsgEntity *entity, char *fileName, int fileSize)
+{
+    if(NULL == entity)
+    {
+        printf("configSendFileHead error: pointer is null");
+        return FAILURE;
+    }
+
+    entity->object = CMD_SEND_FILE;
+    char jointStr[DETAILS_LEN];
+    sprintf(jointStr, "%s#%d", fileName, fileSize);
+    strcpy(entity->details, jointStr);
+    entity->flag = SEND_FLAG;
+
+    return SUCCESSFUL;
+}
+
 Status configLoginEty(MsgEntity *entity, char *user, char * pwd)
 {
     if(user == NULL || pwd == NULL || entity == NULL)

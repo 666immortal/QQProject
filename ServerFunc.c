@@ -1,6 +1,8 @@
 #include "ServerFunc.h"
 #include <pthread.h>
 
+//#define FOLDER_PATH "./fileBox/"
+
 // 外部变量，在线用户列表
 extern userList onlineUserList;
 // __thread local 线程局部变量，每个线程都拥有一份对变量的拷贝
@@ -45,13 +47,44 @@ void *serverClient(void* arg)
         {
             // 若数据量为-1，接收数据发生错误
             perror("recv Error:");
+            if(getThreadState() == OFFLINE)
+            {
+                printf("The user had been offline\n");
+                break;
+            }
+
+            pthread_mutex_lock(&list_mutex);
+            removeUser(&onlineUserList, getThreadID());
+            showUserList(onlineUserList);
+            pthread_mutex_unlock(&list_mutex);
+            if(onlineUserList.num > 0)
+            {
+                pthread_mutex_lock(&list_mutex);
+                broadcastList(&onlineUserList);
+                pthread_mutex_unlock(&list_mutex);
+            } 
         }
         else
         {
             // 若数据量为零，意为连接中断            
             if(bytesNum <= 0)
             {
-                break;
+                if(getThreadState() == OFFLINE)
+                {
+                    printf("The user had been offline\n");
+                    break;
+                }
+
+                pthread_mutex_lock(&list_mutex);
+                removeUser(&onlineUserList, getThreadID());
+                showUserList(onlineUserList);
+                pthread_mutex_unlock(&list_mutex);
+                if(onlineUserList.num > 0)
+                {
+                    pthread_mutex_lock(&list_mutex);
+                    broadcastList(&onlineUserList);
+                    pthread_mutex_unlock(&list_mutex);
+                }                
             }
             else
             {
@@ -166,15 +199,38 @@ Status unPack(MsgContainer package)
             showUserList(onlineUserList);
             pthread_mutex_unlock(&list_mutex);
             if(res == SUCCESSFUL && onlineUserList.num > 0)
+            {
                 pthread_mutex_lock(&list_mutex);
                 res = broadcastList(&onlineUserList);
                 pthread_mutex_unlock(&list_mutex);
+            }                
             if(clientExit(getThreadID()) == FAILURE)
             {
                 printf("Client exit error\n");
                 res = FAILURE;
             }          
             setThreadState(OFFLINE);                
+            break;
+        case CMD_SEND_FILE:
+            if(getThreadState() == OFFLINE)
+            {
+                printf("Please login first\n");
+                res = FAILURE;
+                break;
+            }
+            remindForReceive(&package.content, getThreadID());
+            break;
+        case CMD_TRANSFERING:
+            if(getThreadState() == OFFLINE)
+            {
+                printf("Please login first\n");
+                res = FAILURE;
+                break;
+            }
+            forwardFile(&package.content);
+            break;
+        case CMD_READY:
+            serverForwardReady(getThreadID(), package.content.flag);
             break;
         default:
             res = FAILURE;

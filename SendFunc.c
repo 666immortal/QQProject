@@ -62,6 +62,77 @@ Status sendDlg(MsgEntity *ety, int ID)
     return SUCCESSFUL;
 }
 
+Status clientSendReady(int ID)
+{
+    MsgEntity tmp;
+    tmp.object = CMD_READY;
+    tmp.flag = ID;
+
+    sendCmd(&tmp, ID);
+
+    return SUCCESSFUL;
+}
+
+Status serverForwardReady(int from, int to)
+{
+    MsgEntity tmp;
+    tmp.object = CMD_READY;
+    tmp.flag = from;
+
+    sendCmd(&tmp, to);
+
+    return SUCCESSFUL;
+}
+
+Status remindForReceive(MsgEntity *ety, int from)
+{
+    if(NULL == ety)
+    {
+        printf("forwardDlg error: pointer is null\n");
+        return FAILURE;
+    }
+
+    MsgEntity tmp;
+    tmp.object = CMD_SEND_FILE;
+    for(int i = 0; i < DETAILS_LEN; i++)
+    {
+        tmp.details[i] = ety->details[i];
+    }
+    tmp.flag = from;
+
+    sendCmd(&tmp, ety->flag);
+
+    return SUCCESSFUL;
+}
+
+Status respondReady()
+{
+
+    return SUCCESSFUL;
+}
+
+Status forwardFile(MsgEntity *ety)
+{
+    if(NULL == ety)
+    {
+        printf("forwardFile error: pointer is null\n");
+        return FAILURE;
+    }
+
+    MsgEntity tmp;
+    tmp.object = CMD_TRANSFERING;
+    for(int i = 0; i < DETAILS_LEN; i++)
+    {
+        tmp.details[i] = ety->details[i];
+    }
+    // 这里是内容的长度
+    tmp.flag = ety->flag;
+
+    sendCmd(&tmp, ety->object);
+
+    return SUCCESSFUL;
+}
+
 Status forwardDlg(MsgEntity *ety, int from)
 {
     if(NULL == ety)
@@ -107,8 +178,8 @@ Status broadcastList(userList *list)
 Status broadcastDlg(userList *list, MsgEntity *ety, int ID)
 {
     MsgEntity tmp;
-    tmp.object = ID;
-    tmp.flag = RECV_FLAG;
+    tmp.object = 0;
+    tmp.flag = ID;
     strcpy(tmp.details, ety->details);
 
     int i;

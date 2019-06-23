@@ -54,12 +54,19 @@ Status analysisCmdEty(MsgEntity *entity, int *Msgtype, Stnparser *container)
     {
     case CMD_LOGIN:
     case CMD_REGISTER:
-        analysisLogRegCmd(entity->details, &container->nameAndPwd);
-        res = SUCCESSFUL;
+        res = analysisLogRegCmd(entity->details, &container->nameAndPwd);        
         break;
     case CMD_GETLIST:
         initUserList(&container->list);
-        analysisUserListCmd(entity->details, &container->list);
+        res  = analysisUserListCmd(entity->details, &container->list);        
+        break;
+    case CMD_END_FILE:
+    case CMD_SEND_FILE:
+        printf("File Process\n");
+        res = SUCCESSFUL;
+        break;
+    case CMD_TRANSFERING:
+        printf("transfering...\n");
         res = SUCCESSFUL;
         break;
     case CMD_EXIT:

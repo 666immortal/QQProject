@@ -18,6 +18,8 @@
 // 在线人数最大数目
 #define USER_MAX_NUM 10
 
+#define FILE_NAME_MAX_LEN 50
+
 typedef int Status;
 
 // 字符串结构体

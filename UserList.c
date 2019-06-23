@@ -205,3 +205,25 @@ Status removeUser(userList *list, int ID)
 
     return SUCCESSFUL;
 }
+
+// 使用时不需要申请内存空间，直接从列表里面找地址
+char* searchNameInUserList(userList *list, int ID)
+{
+    int i;
+    for(i = 0; i < list->num; i++)
+    {
+        if(ID == list->user[i].threadID)
+        {
+            break;
+        }
+    }
+
+    if(i >= list->num)
+    {
+        return NULL;
+    }
+    else
+    {
+        return list->user[i].username;
+    }    
+}

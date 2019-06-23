@@ -19,4 +19,11 @@ Status broadcastDlg(userList *list, MsgEntity *ety, int ID);
 Status sendCmd(MsgEntity *ety, int ID); // 发送命令函数
 Status sendDlg(MsgEntity *ety, int ID); // 发送对话函数
 
+Status remindForReceive(MsgEntity *ety, int from);
+Status forwardFile(MsgEntity *ety);
+Status endTransferFile(MsgEntity *ety, int from);
+
+Status clientSendReady(int ID);
+Status serverSendReady(int ID);
+
 #endif

@@ -21,5 +21,4 @@ Status analysisCmdEty(MsgEntity *entity, int *Msgtype, Stnparser *container);
 // 结束解析一个命令消息，记得要配对使用，否则会造成内存泄漏
 Status endAnalysis(int Msgtype, Stnparser *container);
 
-
 #endif

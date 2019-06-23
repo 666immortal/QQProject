@@ -30,5 +30,6 @@ Status listToString(userList list, char *str); // 将列表连接成串，以空
 Status addUser(userList *list, char *name, int ID);
 // 从列表中移除用户之后，记得释放user指针
 Status removeUser(userList *list, int index);
+char* searchNameInUserList(userList *list, int ID);
 
 #endif

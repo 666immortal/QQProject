@@ -25,7 +25,10 @@ typedef enum
     CMD_REGISTER = -1, // 注册
     CMD_LOGIN = -2, // 登陆
     CMD_GETLIST = -3, // 获取列表
-    CMD_EXIT = -4 // 退出
+    CMD_EXIT = -4, // 退出
+    CMD_SEND_FILE = -5,
+    CMD_TRANSFERING = -6,
+    CMD_READY = -7
 }CmdType;
 
 // 消息实体
