@@ -186,7 +186,7 @@ Status removeUser(userList *list, int ID)
     int i;
     for(i = 0; i < list->num; i++)
     {
-        if(list->user->threadID == ID)
+        if(list->user[i].threadID == ID)
             break;
     }
 
