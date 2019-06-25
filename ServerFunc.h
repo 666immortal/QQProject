@@ -21,7 +21,5 @@ Status searchInFile(userVerify info); // 在文件中查找用户
 Status clientRegister(userVerify info); // 客户注册处理函数
 Status clientLogin(userVerify info); // 客户登陆处理函数
 Status clientWannaList(int ID); // 客户求取列表处理函数
-Status clientExit(int ID); // 客户退出处理函数
-
 
 #endif

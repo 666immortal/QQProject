@@ -89,9 +89,7 @@ void *serverClient(void* arg)
             else
             {
                 // 解析数据包并执行操作
-                printf("--------------------\n");
                 showMsgContainer(*(MsgContainer*)buf);
-                printf("--------------------\n");
                 unPack(*(MsgContainer*)buf);
             }
         }    
@@ -111,7 +109,9 @@ Status unPack(MsgContainer package)
         Stnparser info;  // 存放命令内容
 
         // 解析命令包，获取命令内容
+        printf("I receive a package\n");
         analysisCmdEty(&package.content,&type, &info);
+        printf("parser a package successful\n");
         switch (type)
         {
         case CMD_REGISTER:  // 用户发来注册命令
@@ -189,7 +189,7 @@ Status unPack(MsgContainer package)
         case CMD_EXIT:
             if(getThreadState() == OFFLINE)
             {
-                printf("The user had been offline\n");
+                printf("Recv exit cmd but the user had been offline\n");
                 res = FAILURE;
                 break;
             }
@@ -204,11 +204,6 @@ Status unPack(MsgContainer package)
                 res = broadcastList(&onlineUserList);
                 pthread_mutex_unlock(&list_mutex);
             }                
-            if(clientExit(getThreadID()) == FAILURE)
-            {
-                printf("Client exit error\n");
-                res = FAILURE;
-            }          
             setThreadState(OFFLINE);                
             break;
         case CMD_SEND_FILE:
@@ -227,10 +222,16 @@ Status unPack(MsgContainer package)
                 res = FAILURE;
                 break;
             }
-            forwardFile(&package.content);
+            forwardFile(&package.content, getThreadID());
             break;
-        case CMD_READY:
-            serverForwardReady(getThreadID(), package.content.flag);
+        case CMD_END_TRANSFER:
+            if(getThreadState() == OFFLINE)
+            {
+                printf("Please login first\n");
+                res = FAILURE;
+                break;
+            }
+            remindForEnding(&package.content, getThreadID());
             break;
         default:
             res = FAILURE;
@@ -365,15 +366,6 @@ Status clientWannaList(int ID)
     }
     
     return res;
-}
-
-Status clientExit(int ID)
-{
-    MsgEntity tmp;
-    tmp.object = CMD_EXIT;
-    tmp.flag = SEND_FLAG;
-
-    return sendCmd(&tmp, ID);
 }
 
 static void setThreadID(int ID)

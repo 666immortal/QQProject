@@ -61,15 +61,19 @@ Status analysisCmdEty(MsgEntity *entity, int *Msgtype, Stnparser *container)
         res  = analysisUserListCmd(entity->details, &container->list);        
         break;
     case CMD_SEND_FILE:
-        printf("File Process\n");
+        printf("parser: File Process\n");
         res = SUCCESSFUL;
         break;
     case CMD_TRANSFERING:
-        printf("transfering...\n");
+        printf("parser: transfering...\n");
         res = SUCCESSFUL;
         break;
     case CMD_EXIT:
-        printf("exit\n");
+        printf("parser: exit\n");
+        res = SUCCESSFUL;
+        break;
+    case CMD_END_TRANSFER:
+        printf("transfer end...\n");
         res = SUCCESSFUL;
         break;
     default:

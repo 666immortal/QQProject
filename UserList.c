@@ -198,7 +198,8 @@ Status removeUser(userList *list, int ID)
 
     for(; i < list->num - 1; i++)
     {
-        list->user[i] = list->user[i + 1];  
+        strcpy(list->user[i].username, list->user[i + 1].username);
+        list->user[i].threadID = list->user[i + 1].threadID;  
     }
 
     list->num--;

@@ -17,7 +17,8 @@ Status configUserListEty(MsgEntity *entity, userList *list);
 // 配置退出实体，客户端才用得到，服务器负责解析
 Status configExitEty(MsgEntity *entity);
 
-Status configSendFileCmd(MsgEntity *cmd, char *fileName, int fileSize);
+Status configSendFileCmd(MsgEntity *entity, int sendForWho, char *fileName);
 Status configFileSegment(MsgEntity *entity, char *byte, int len);
+Status configEndTransferCmd(MsgEntity *entity, int sendForWho);
 
 #endif

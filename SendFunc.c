@@ -22,6 +22,7 @@ Status sendRegister(int ID)
     return sendCmd(&tmp, ID);
 }
 
+// ID为发送传文件请求的人
 Status sendCmd(MsgEntity *ety, int ID)
 {
     if(NULL == ety)
@@ -32,7 +33,9 @@ Status sendCmd(MsgEntity *ety, int ID)
 
     MsgContainer tmp;
     tmp.type = COMMAND;
-    tmp.content = *ety;
+    strcpy(tmp.content.details, ety->details);
+    tmp.content.flag = ety->flag;
+    tmp.content.object = ety->object;
 
     if(send(ID, (void *)&tmp, sizeof(MsgContainer), 0) == -1)
     {
@@ -53,7 +56,9 @@ Status sendDlg(MsgEntity *ety, int ID)
 
     MsgContainer tmp;
     tmp.type = DIALOGUE;
-    tmp.content = *ety;
+    strcpy(tmp.content.details, ety->details);
+    tmp.content.flag = ety->flag;
+    tmp.content.object = ety->object;
 
     if(send(ID, (void *)&tmp, sizeof(MsgContainer), 0) == -1)
     {
@@ -64,29 +69,31 @@ Status sendDlg(MsgEntity *ety, int ID)
     return SUCCESSFUL;
 }
 
-Status clientSendReady(int ID)
+Status remindForReceive(MsgEntity *ety, int from)
 {
+    printf("I am here 8!\n");
+    if(NULL == ety)
+    {
+        printf("forwardDlg error: pointer is null\n");
+        return FAILURE;
+    }
+    printf("I am here 9!\n");
+
     MsgEntity tmp;
-    tmp.object = CMD_READY;
-    tmp.flag = ID;
-
-    sendCmd(&tmp, ID);
-
-    return SUCCESSFUL;
-}
-
-Status serverForwardReady(int from, int to)
-{
-    MsgEntity tmp;
-    tmp.object = CMD_READY;
+    tmp.object = CMD_SEND_FILE;
+    for(int i = 0; i < DETAILS_LEN; i++)
+    {
+        tmp.details[i] = ety->details[i];
+    }
+    printf("I am here 10!\n");
     tmp.flag = from;
 
-    sendCmd(&tmp, to);
+    sendCmd(&tmp, ety->flag);
 
     return SUCCESSFUL;
 }
 
-Status remindForReceive(MsgEntity *ety, int from)
+Status remindForEnding(MsgEntity *ety, int from)
 {
     if(NULL == ety)
     {
@@ -95,11 +102,8 @@ Status remindForReceive(MsgEntity *ety, int from)
     }
 
     MsgEntity tmp;
-    tmp.object = CMD_SEND_FILE;
-    for(int i = 0; i < DETAILS_LEN; i++)
-    {
-        tmp.details[i] = ety->details[i];
-    }
+    tmp.object = CMD_END_TRANSFER;
+    strcpy(tmp.details, "");
     tmp.flag = from;
 
     sendCmd(&tmp, ety->flag);
@@ -107,13 +111,16 @@ Status remindForReceive(MsgEntity *ety, int from)
     return SUCCESSFUL;
 }
 
-Status forwardFile(MsgEntity *ety)
+Status forwardFile(MsgEntity *ety, int from)
 {
     if(NULL == ety)
     {
         printf("forwardFile error: pointer is null\n");
         return FAILURE;
     }
+    
+    int sendFor = 0;
+    unsigned short *point = &ety->flag;
 
     MsgEntity tmp;
     tmp.object = CMD_TRANSFERING;
@@ -121,10 +128,11 @@ Status forwardFile(MsgEntity *ety)
     {
         tmp.details[i] = ety->details[i];
     }
-    // 这里是内容的长度
-    tmp.flag = ety->flag;
 
-    sendCmd(&tmp, ety->object);
+    sendFor = (int)point[1];
+    tmp.flag = (int)point[0];
+
+    sendCmd(&tmp, sendFor);
 
     return SUCCESSFUL;
 }

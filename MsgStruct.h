@@ -28,7 +28,7 @@ typedef enum
     CMD_EXIT = -4, // 退出
     CMD_SEND_FILE = -5,
     CMD_TRANSFERING = -6,
-    CMD_READY = -7
+    CMD_END_TRANSFER = -7
 }CmdType;
 
 // 消息实体
