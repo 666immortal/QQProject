@@ -15,4 +15,4 @@ client:$(CLI_OBJS)
 	$(CC) $(CFLAGS) -std=c99 $< -o $@
 
 clean:
-	rm -rf server client *.o
+	rm -rf *.o
