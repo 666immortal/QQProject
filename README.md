@@ -1,6 +1,4 @@
-# QQProject
-
-## 大学期末大作业
+# QQProject（大学期末大作业）
 ### 基于Linux的多用户QQ(IM, Instant Messager)
 
 1. C/S模式，服务器支持多个用户同时在线（>3）
