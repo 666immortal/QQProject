@@ -71,13 +71,11 @@ Status sendDlg(MsgEntity *ety, int ID)
 
 Status remindForReceive(MsgEntity *ety, int from)
 {
-    printf("I am here 8!\n");
     if(NULL == ety)
     {
         printf("forwardDlg error: pointer is null\n");
         return FAILURE;
     }
-    printf("I am here 9!\n");
 
     MsgEntity tmp;
     tmp.object = CMD_SEND_FILE;
@@ -85,7 +83,6 @@ Status remindForReceive(MsgEntity *ety, int from)
     {
         tmp.details[i] = ety->details[i];
     }
-    printf("I am here 10!\n");
     tmp.flag = from;
 
     sendCmd(&tmp, ety->flag);

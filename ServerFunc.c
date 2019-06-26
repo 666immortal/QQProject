@@ -55,7 +55,7 @@ void *serverClient(void* arg)
 
             pthread_mutex_lock(&list_mutex);
             removeUser(&onlineUserList, getThreadID());
-            showUserList(onlineUserList);
+            //showUserList(onlineUserList);
             pthread_mutex_unlock(&list_mutex);
             if(onlineUserList.num > 0)
             {
@@ -77,7 +77,7 @@ void *serverClient(void* arg)
 
                 pthread_mutex_lock(&list_mutex);
                 removeUser(&onlineUserList, getThreadID());
-                showUserList(onlineUserList);
+                //showUserList(onlineUserList);
                 pthread_mutex_unlock(&list_mutex);
                 if(onlineUserList.num > 0)
                 {
@@ -89,7 +89,7 @@ void *serverClient(void* arg)
             else
             {
                 // 解析数据包并执行操作
-                showMsgContainer(*(MsgContainer*)buf);
+                //showMsgContainer(*(MsgContainer*)buf);
                 unPack(*(MsgContainer*)buf);
             }
         }    
@@ -128,7 +128,7 @@ Status unPack(MsgContainer package)
                 pthread_mutex_lock(&list_mutex);  // 给用户列表上锁
                 // 向用户列表中添加用户
                 res = addUser(&onlineUserList, info.nameAndPwd.username, getThreadID()); 
-                showUserList(onlineUserList);               
+                //showUserList(onlineUserList);               
                 pthread_mutex_unlock(&list_mutex); // 给用户列表解锁
                 if(res == FAILURE) // 发生错误，退出
                     break;
@@ -159,7 +159,7 @@ Status unPack(MsgContainer package)
                 pthread_mutex_lock(&list_mutex); // 用户列表上锁
                 // 向用户列表中添加用户
                 res = addUser(&onlineUserList, info.nameAndPwd.username, getThreadID());
-                showUserList(onlineUserList);
+                //showUserList(onlineUserList);
                 pthread_mutex_unlock(&list_mutex); // 用户列表解锁
                 if(res == FAILURE) // 添加用户失败，退出
                     break;
@@ -196,7 +196,7 @@ Status unPack(MsgContainer package)
 
             pthread_mutex_lock(&list_mutex);
             res = removeUser(&onlineUserList, getThreadID());
-            showUserList(onlineUserList);
+            //showUserList(onlineUserList);
             pthread_mutex_unlock(&list_mutex);
             if(res == SUCCESSFUL && onlineUserList.num > 0)
             {

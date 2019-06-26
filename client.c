@@ -9,7 +9,7 @@
 #include <sys/socket.h>
 #include <pthread.h>
 
-#define CLIENT_IPADDR "172.21.128.127"
+#define CLIENT_IPADDR "172.21.128.67"
 #define SERVPORT 1012
 
 userList cast;
@@ -37,8 +37,6 @@ void main()
       perror("network connect Error!");
       exit(1);
   }
-
-  printf("My socket id is: %d\n", sockfd);
 
   int select = 0;
   char username[NAME_MAX_LEN];
@@ -121,7 +119,7 @@ while (1)
     case 2:  // 文件传输
       printf("请输入文件的发送对象（输入用户序号）：\n");   
       scanf("%d", &flag);
-      while (searchNameInUserList(&cast, flag) == NULL || flag == sockfd)
+      while (searchNameInUserList(&cast, flag) == NULL)
       {
         printf("输入序号有误，请重新输入：\n");
         printf("---------- 用户列表 ------------\n");
@@ -137,7 +135,7 @@ while (1)
     case 3:  // 发送私信
       printf("请输入信息的发送对象（输入用户序号）：\n");     
       scanf("%d", &object);
-      while (searchNameInUserList(&cast, object) == NULL || flag == sockfd)
+      while (searchNameInUserList(&cast, object) == NULL)
       {
         printf("输入序号有误，请重新输入：\n");
         printf("---------- 用户列表 ------------\n");
@@ -151,8 +149,8 @@ while (1)
       flag = SEND_FLAG;
       break;
     case 4:  // 群发消息
-      printf("请输入要发送的消息(请不要添加空格)：\n");     
-      scanf("%s", str);
+      printf("请输入要发送的消息(请不要添加空格)：\n");   
+      scanf("%s", str); 
       bagType = DIALOGUE;
       object = 0;
       flag = sockfd;
@@ -174,17 +172,17 @@ while (1)
       tmp.content.object = object;
       strcpy(tmp.content.details, str);
       tmp.content.flag =  flag;
-      printf("I send a package as follow:\n");
-      printf("----------------------\n");
-      showMsgContainer(tmp);
-      printf("----------------------\n");
+      // printf("I send a package as follow:\n");
+      // printf("----------------------\n");
+      // showMsgContainer(tmp);
+      // printf("----------------------\n");
 
       if((sendbytes = send(sockfd, (void *)&tmp, sizeof(MsgContainer), 0)) == -1)
       {
         perror("send Error!");
         exit(1);
       }
-      printf("send successful\n");
+      //printf("send successful\n");
       }    
   }
 
@@ -218,10 +216,6 @@ void *processRecv(void *arg)
       }
       else
       {
-        printf("--------------------------\n");
-        printf("I receive a package:\n");
-        showMsgContainer(tmp);
-        printf("--------------------------\n");
         if(tmp.type == COMMAND)
         {
             char who[NAME_MAX_LEN];
